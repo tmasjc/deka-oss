@@ -1,0 +1,28 @@
+# Beta auth — operator-curated invited users.
+#
+# Each user owns a long-lived 256-bit bearer token (a random hex string).
+# This file stores only the token's SHA-256 — the plaintext lives with
+# the user, out of band. There is no rotation tooling; re-issuing means
+# editing this file and re-sending the new plaintext.
+#
+# Generate a token + its sha256 for a new user:
+#
+#   python -c "import secrets,hashlib; t=secrets.token_hex(32); \
+#              print('plaintext:', t); \
+#              print('sha256:   ', hashlib.sha256(t.encode()).hexdigest())"
+#
+# Keep the plaintext to send to the user; store only the sha256 here.
+#
+# Each user's `id` is the stable wire key — it scopes session storage
+# (runs/<id>/...). Renaming an `id` orphans that user's sessions on
+# disk, so treat renames as breaking changes; deactivate + re-add
+# instead.
+#
+# `allowed_scopes` is optional. Omit (or set null) to grant every scope
+# declared in scopes.yaml; otherwise list the scope names the user
+# may pick from. Each entry must match a `name` in scopes.yaml.
+
+users:
+  - id: dev
+    token_sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    # allowed_scopes: ["Parent Full"]

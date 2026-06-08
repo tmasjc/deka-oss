@@ -1,0 +1,27 @@
+% F1 — the harness loop (Phase 1)
+\begin{tikzpicture}[
+  font=\small,
+  node distance=5mm and 10mm,
+  box/.style={draw, rounded corners, align=center, inner sep=4pt, text width=78mm, fill=RoyalBlue!4},
+  guide/.style={box, fill=black!5},
+  dec/.style={draw, diamond, aspect=2.4, align=center, inner sep=1pt, fill=orange!12, text width=18mm},
+  arr/.style={-{Stealth}, thick}
+]
+\node[guide] (ff) {\textbf{Feedforward guides}\\[1pt] query $\cdot$ locked config (\texttt{rrf\_k}, \texttt{top\_k}, \dots) $\cdot$ hard constraints};
+\node[box, below=of ff] (act) {\textbf{Agent action: hybrid search}\\[1pt] dense (COSINE) + learned-sparse (IP) $\rightarrow$ RRF fusion};
+\node[box, below=of act] (pres) {\textbf{Present} top-$K$ fused chunks --- IDs \& per-path scores};
+\node[box, below=of pres] (fb) {\textbf{Feedback sensors}\\[1pt] human FIT / NOT\_FIT / DISCARD $\;+\;$ computed P@K};
+\node[box, below=of fb] (refl) {\textbf{Reflection}: Observe $\rightarrow$ Diagnose $\rightarrow$ Hypothesize};
+\node[box, below=of refl] (log) {\textbf{Progress log} --- append turn (externalized state)};
+\node[dec, below=of log] (conv) {converged?};
+\node[box, below=of conv, fill=green!10] (harv) {\textbf{Harvest} (Phase 2): the FIT chunks become the query set};
+
+\draw[arr] (ff) -- (act);
+\draw[arr] (act) -- (pres);
+\draw[arr] (pres) -- (fb);
+\draw[arr] (fb) -- (refl);
+\draw[arr] (refl) -- (log);
+\draw[arr] (log) -- (conv);
+\draw[arr] (conv) -- node[right, font=\footnotesize]{yes} (harv);
+\draw[arr] (conv.east) -- node[above, font=\footnotesize]{no} ++(34mm,0) |- (act.east);
+\end{tikzpicture}

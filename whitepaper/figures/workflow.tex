@@ -1,0 +1,101 @@
+% F4 — end-to-end workflow with Substrate / Agent / Operator swim lanes
+\begin{tikzpicture}[
+  font=\footnotesize,
+  lane/.style={font=\small\bfseries, text=black!50},
+  phase/.style={draw=RoyalBlue!70, fill=RoyalBlue!12, align=center,
+                font=\small\bfseries, rounded corners=2pt,
+                text width=32mm, minimum height=15mm, line width=0.5pt},
+  art/.style={draw=black!50, fill=black!4, align=center, font=\footnotesize,
+              text width=42mm, minimum height=13mm, line width=0.3pt},
+  human/.style={draw=orange!75, fill=orange!12, align=center, font=\footnotesize,
+                rounded corners=2pt, text width=40mm, minimum height=13mm,
+                line width=0.5pt},
+  wr/.style={-{Stealth[length=2.2mm]}, thin, black!55},
+  rd/.style={-{Stealth[length=2.2mm]}, thin, densely dashed, black!50},
+  bi/.style={{Stealth[length=2mm]}-{Stealth[length=2mm]}, thin, black!55},
+  advance/.style={-{Stealth[length=3.2mm,width=3.2mm]}, line width=1.4pt,
+                  RoyalBlue!70},
+  loop/.style={-{Stealth[length=2mm]}, semithick, RoyalBlue!70}
+]
+
+% Column x-centres
+\def\xS{0}
+\def\xA{5.7}
+\def\xO{10.7}
+
+% Swim-lane backgrounds
+\begin{scope}[on background layer]
+  \fill[black!3, rounded corners=3pt]
+    (\xS-2.45, -9.0) rectangle (\xS+2.45, 0.6);
+  \fill[RoyalBlue!4, rounded corners=3pt]
+    (\xA-2.0, -9.0) rectangle (\xA+2.0, 0.6);
+  \fill[orange!5, rounded corners=3pt]
+    (\xO-2.2, -9.0) rectangle (\xO+2.2, 0.6);
+\end{scope}
+
+% Lane labels
+\node[lane] at (\xS, 0.25) {SUBSTRATE};
+\node[lane] at (\xA, 0.25) {AGENT};
+\node[lane] at (\xO, 0.25) {OPERATOR};
+
+% Phase row y-centres
+\def\yI{-1.6}
+\def\yII{-3.6}
+\def\yIII{-5.6}
+\def\yIV{-7.6}
+
+% --- Phase 1 row ---
+\node[art]   at (\xS, \yI)  (a1)
+  {\textbf{progress log} \\[1pt] \mdseries\footnotesize FITs, NOT\_FITs, ratings, reflection};
+\node[phase] at (\xA, \yI)  (p1)
+  {\textbf{1.\,Probe} \\[1pt] \mdseries\footnotesize hybrid search \\[-1pt] \mdseries\footnotesize + reflect};
+\node[human] at (\xO, \yI)  (o1)
+  {\textbf{rate} FIT/NOT\_FIT/DISCARD \\[1pt] \mdseries\footnotesize + path-drop audit (opt.)};
+
+% Phase 1 loop indicator
+\draw[loop] ([xshift=-3.5mm]p1.north) to[out=120, in=60, looseness=3]
+  node[above, font=\scriptsize\itshape, text=RoyalBlue!70, yshift=-0.5pt]{per-turn loop}
+  ([xshift=3.5mm]p1.north);
+
+% --- Phase 2 row ---
+\node[art]   at (\xS, \yII) (a2)
+  {\textbf{harvest sidecar} \\[1pt] \mdseries\footnotesize cohort PKs, $T'_i$, qualifying anchors};
+\node[phase] at (\xA, \yII) (p2)
+  {\textbf{2.\,Harvest} \\[1pt] \mdseries\footnotesize calibrate $T'_i$ \\[-1pt] \mdseries\footnotesize widen $k$-NN};
+\node[human] at (\xO, \yII) (o2)
+  {\textbf{review} LOO + quality gate \\[1pt] \mdseries\footnotesize + cohort size; confirm};
+
+% --- Phase 3 row ---
+\node[art]   at (\xS, \yIII) (a3)
+  {\textbf{rubric + judged sample} \\[1pt] \mdseries\footnotesize + meta-prompt SHA};
+\node[phase] at (\xA, \yIII) (p3)
+  {\textbf{3.\,Refine} \\[1pt] \mdseries\footnotesize derive $\cdot$ sample \\[-1pt] \mdseries\footnotesize judge $\cdot$ review};
+\node[human] at (\xO, \yIII) (o3)
+  {\textbf{review} judged verdicts \\[1pt] \mdseries\footnotesize finalise / discard \& bump};
+
+% --- Phase 4 row ---
+\node[art]   at (\xS, \yIV) (a4)
+  {\textbf{classifier + per-chunk labels} \\[1pt] \mdseries\footnotesize + keep-probability};
+\node[phase] at (\xA, \yIV) (p4)
+  {\textbf{4.\,Apply} \\[1pt] \mdseries\footnotesize train $\cdot$ calibrate \\[-1pt] \mdseries\footnotesize $\cdot$ score};
+\node[human] at (\xO, \yIV) (o4)
+  {\textbf{slide} threshold \\[1pt] \mdseries\footnotesize ship or override};
+
+% Phase-advance spine (bold blue arrows down the agent lane)
+\draw[advance] (p1) -- (p2);
+\draw[advance] (p2) -- (p3);
+\draw[advance] (p3) -- (p4);
+
+% Writes: phase → its artifact in the substrate lane
+\draw[wr] (p1.west) -- (a1.east);
+\draw[wr] (p2.west) -- (a2.east);
+\draw[wr] (p3.west) -- (a3.east);
+\draw[wr] (p4.west) -- (a4.east);
+
+% Agent ↔ Operator: present / verdict
+\draw[bi] (p1.east) -- (o1.west);
+\draw[bi] (p2.east) -- (o2.west);
+\draw[bi] (p3.east) -- (o3.west);
+\draw[bi] (p4.east) -- (o4.west);
+
+\end{tikzpicture}

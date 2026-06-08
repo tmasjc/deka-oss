@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
+dist/
+
+# Secrets and local config — never commit (copy the *.example templates instead)
+.env
+config.yaml
+scopes.yaml
+users.yaml
+
+# Per-session outputs
+runs/
+
+# Web (frontend)
+web/node_modules/
+web/dist/
+web/tsconfig.tsbuildinfo
+
+# Build artifacts
+whitepaper/whitepaper.pdf

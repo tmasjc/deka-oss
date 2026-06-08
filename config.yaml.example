@@ -1,0 +1,215 @@
+# Deka — unified configuration.
+#
+# This file is the canonical template. Copy to `config.yaml` to make
+# local edits; `config.yaml` is gitignored so your overrides stay
+# private. The loaders fall back to this example file when
+# `config.yaml` is absent, so a fresh checkout works without copying.
+#
+# Every key below is required — the per-section loaders raise on any
+# missing or unknown key.
+
+# --- Search tuning (src/search/config.py) ---------------------------
+# DEKA_EMBED_URL / DEKA_MILVUS_URI env vars (see .env.example) override
+# embed_url / milvus_uri at load time so a local run can point at a
+# remote stack.
+#
+# The Milvus collection is *not* declared here — it lives on the chosen
+# scope's ``milvus_collection`` (see ``scopes.yaml``) and is
+# applied per-session via :func:`src.search.config.with_overrides`.
+search:
+  rrf_k: 60
+  per_path_limit: 20
+  top_k: 10
+  # If fewer than this many rows survive the post-filter gates,
+  # ``run_search`` auto-doubles ``per_path_limit`` (up to 3 attempts)
+  # so the operator always has enough candidates to rate. Must be ≤ top_k.
+  min_survivors: 5
+  active_paths: [dense, sparse]
+  embed_url: http://localhost:8000
+  milvus_uri: http://localhost:19530
+  http_timeout: 30
+
+# --- Span extractor (src/extraction/extractor.py) -------------------
+# Temperature is pinned to 0 in code so cache keys stay stable across
+# runs. In normal use the span cache path is set per-session by the
+# web backend (``src/web_api/sessions.py::_default_extractor_factory``
+# constructs a SpanCache at ``runs/{session_id}.span_cache.jsonl``);
+# ``cache_root`` below is the fallback when ``SpanExtractor`` is
+# constructed without an explicit cache. Resolved relative to the repo
+# root when not absolute.
+extraction:
+  model: openai/gpt-5.4-mini
+  base_url: https://openrouter.ai/api/v1
+  prompt_version: v2
+  api_key_env: OPENROUTER_API_KEY
+  cache_root: runs/span_cache.jsonl
+  # Optional dual-vendor extraction (issue #54). When all three
+  # ``secondary_*`` keys are set, the harness runs both vendors per
+  # chunk in parallel and unions their span_line_indices. Trades
+  # ~2× LLM cost for higher recall on the highest-leverage step in
+  # the pipeline. If only one vendor responds, its result is used
+  # alone; only when both fail does the chunk drop. Comment all
+  # three keys to keep single-vendor behavior unchanged.
+  # secondary_model: qwen-plus
+  # secondary_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+  # secondary_api_key_env: DASHSCOPE_API_KEY
+
+# --- Reflection agent (src/reflection/agent.py) ---------------------
+reflection:
+  model: openai/gpt-5.4-mini
+  base_url: https://openrouter.ai/api/v1
+  temperature: 0.7
+  api_key_env: OPENROUTER_API_KEY
+
+# --- Harvest: Phase 1 convergence → Phase 2 retrieval ---------------
+# Phase 1 convergence triple gate: the latest turn's Precision@K must
+# meet precision_at_k AND the cumulative unique FIT primary-key count
+# across all turns must meet min_fit AND the cumulative unique NOT_FIT
+# count must meet min_not_fit. All three required — any short →
+# session not converged. min_not_fit exists because Phase 3 rubric
+# derivation needs negative examples to discriminate; a session with
+# zero NOT_FITs starves the meta-prompt of contrastive evidence.
+# Phase 2 retrieval uses pymilvus `search_iterator`. batch_size is
+# the iterator page size (must stay ≤ MAX_BATCH_SIZE=16384). max_k
+# is the per-FIT safety cap on cumulative hits; hitting it writes
+# the partial result and records the FIT in per_fit_budget_exhausted.
+# s2c_outlier_multiple is the anchor-quality gate knob (drop FIT if
+# δ_i > k · median(δ); δ_i > T is always on).
+# radius_scheme picks the main-pass threshold:
+#   per_fit   — each FIT uses its own T'_i = T + δ_i (legacy).
+#   decoupled — main pass uses session-wide T'_out = T + min(δ);
+#               LOO still uses per-FIT T'_i. See issue #20.
+# anchor_frequency_gate (issue #22) tightens the main-pass cohort: a
+# chunk is retained only when it falls within the calibrated radius of
+# at least ``f`` distinct FIT anchors. 1 disables the gate (legacy
+# single-anchor behaviour); 2 (default) requires agreement across at
+# least two anchors. Must be ≤ the cohort surviving the quality gate.
+# CLI overrides (per-invocation): --batch-size, --max-k,
+# --radius-scheme.
+harvest:
+  min_fit: 15
+  min_not_fit: 3
+  precision_at_k: 0.8
+  batch_size: 2000
+  max_k: 200000
+  s2c_outlier_multiple: 3.0
+  radius_scheme: per_fit
+  anchor_frequency_gate: 2
+
+# --- Refine: Phase 3 boundary refinement (src/refine/) --------------
+# Phase 3 derives a per-query rubric prompt from a converged Phase 1
+# session, samples the Phase 2 cohort by distance decile, judges each
+# sampled chunk against the rubric, and ships the prompt + verdict
+# evidence as four sidecars under runs/. See
+# proposals/phase3_boundary_refinement.md for the full design.
+#
+# Two models, two jobs:
+#   - derive (strong): authors the rubric. One LLM call per turn.
+#   - judge  (fast):   applies the rubric per-chunk. ~sample_size
+#                      calls per turn.
+# Operators may set both to the same model; the split exists so the
+# default doesn't waste a strong model on the easy job or starve the
+# hard one.
+#
+# Sampling: sample_size must be divisible by n_bins. The default
+# 500 / 10 yields 50 chunks per decile, which is enough to read a
+# monotonic keep-rate curve at minimal LLM cost.
+#
+# auto_drop_known_intruders: when true, any sampled PK already rated
+# NOT_FIT in Phase 1 (recorded as an intruder in phase2.meta.json) is
+# auto-DROPped without an LLM call. Defaults to true; set false if you
+# want the judge to evaluate those PKs under the new rubric anyway.
+refine:
+  enabled: true
+  # 500 is the cost/quality sweet spot: at this size the LR
+  # classifier saturates (CV picks the same τ as at 1000, eval
+  # precision/recall match or beat the larger baseline) and the eval
+  # split (n=100) is still wide enough to defend the precision bar.
+  # Drop to 300 only if Phase 3 cost is the binding constraint —
+  # recall starts collapsing below that.
+  sample_size: 500
+  n_bins: 10
+  seed: 0
+  meta_prompt_path: harness/prompts/RUBRIC_DERIVE.md
+  # Caps on FIT / NOT_FIT exemplars passed to the rubric deriver. When
+  # a session carries more than this many ratings of either kind,
+  # ``derive_rubric`` embeds each candidate's text and picks the most
+  # semantically diverse subset (greedy farthest-first over cosine
+  # distance). This prevents FITs from overflowing the meta-prompt when
+  # an operator rates many positives but few negatives. Embedding only
+  # runs when truncation is necessary; sessions already within both
+  # caps incur zero extra cost.
+  max_fit_examples: 6
+  max_not_fit_examples: 6
+  derive_model: deepseek-v4-pro
+  derive_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+  derive_temperature: 0.2
+  # Forwards extra_body={"enable_thinking": True} to DashScope so the
+  # derive LLM gets its full reasoning budget for the meta-prompt's
+  # self-validation walk-through. Optional; non-thinking endpoints
+  # (OpenRouter, plain qwen-plus) ignore it harmlessly.
+  derive_enable_thinking: true
+  judge_model: qwen3.6-flash
+  judge_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+  judge_concurrency: 16
+  judge_qps_limit: 8.0
+  judge_tpm_limit: 200000.0
+  judge_timeout_seconds: 30
+  judge_max_retries: 2
+  api_key_env: DASHSCOPE_API_KEY
+  # `judge_api_key_env` (optional) decouples judge's bearer from
+  # derive's. Useful when the two endpoints belong to different
+  # providers — e.g. judge on a self-hosted vLLM accepting any opaque
+  # Bearer. Omit when both phases share an api_key_env.
+  # judge_api_key_env: VLLM_API_KEY
+  auto_drop_known_intruders: true
+
+# --- Apply: Phase 4 cohort apply (src/apply/) -----------------------
+# Phase 4 trains a cheap logistic-regression classifier on the Phase 3
+# judged sample (KEEP vs DROP) and applies it to the full Phase 2 cohort
+# at zero LLM cost. The classifier is the boundary-applier; the rubric
+# remains the boundary-definer. Single threshold, no LLM fallback band,
+# no per-chunk review — operator's interaction is with the threshold.
+#
+# confidence_threshold is the default τ; the operator can override at
+# review time. min_precision is the acceptance bar — eval precision
+# below this surfaces a warning + requires explicit override.
+# eval_fraction is the held-out share of the Phase 3 sample used to
+# measure headline precision; the remainder trains the classifier.
+# kfold_splits drives the in-training k-fold CV that selects τ.
+# embedding_dim is validated against Milvus on load (BGE-M3 = 1024).
+# embedding_fetch_batch is the Milvus query page size when pulling the
+# cohort's dense vectors at apply time.
+apply:
+  enabled: true
+  confidence_threshold: 0.7
+  min_precision: 0.75
+  # eval_fraction is deprecated and ignored — Phase 4 evaluates via
+  # repeated stratified k-fold over all N labelled rows. Field is
+  # still required for back-compat; remove in a future config bump.
+  eval_fraction: 0.2
+  kfold_splits: 5
+  eval_n_repeats: 5
+  seed: 0
+  embedding_dim: 1024
+  embedding_fetch_batch: 2000
+
+# --- Postgres original-content lookup (src/postgres/config.py) ------
+# Powers the "Expand" chunk-content interaction in the web UI and the
+# Phase 3 judge's chunk-content reads. DEKA_POSTGRES_DSN env var
+# overrides `dsn` at load time so a local run can point at a remote
+# database without editing this file.
+#
+# The Postgres table is *not* declared here — every scope
+# declares its own ``postgres_table`` in ``scopes.yaml`` so a
+# single deployment can serve multiple Milvus collections backed by
+# distinct Postgres tables. Web sessions resolve the table from the
+# chosen scope; there is no global default to fall back to.
+postgres:
+  # Flip to `false` to disable context expansion server-wide. When
+  # disabled, the other keys below may be omitted.
+  enabled: true
+  dsn: postgresql://localhost:5432/pipeline
+  id_column: id
+  content_column: original_content
+  connect_timeout: 5

@@ -1,0 +1,42 @@
+title: "Deka — Aligning Human Intuition with an Embedding Space"
+subtitle: "A Human-in-the-Loop Workbench for High-Precision Corpus Retrieval"
+author: "Thomas Jc\\thanks{\\href{https://github.com/tmasjc}{github.com/tmasjc}}"
+date: "June 2026"
+abstract: >
+  A large corpus of Chinese customer-conversation transcripts holds
+  valuable operational knowledge --- how sales and service staff handle price
+  objections, drive renewals, and build rapport with customers ---
+  yet it is far too large to read, and no single hybrid-search
+  configuration retrieves every kind of query well. Deka --- *Definition and Embedding Knowledge Alignment* ---
+  is a
+  human-in-the-loop workbench that escalates a domain expert's intuitive
+  notion of a query into a precise, reproducible, and scalable set of
+  labelled results. It proceeds in four phases: an interactive *Probe*
+  loop tunes hybrid retrieval until the operator's relevance judgements
+  converge; a FIT-anchored *Harvest* treats those validated examples as
+  a query set and sweeps the corpus for their embedding neighbourhood; a
+  *Refine* pass distils the resulting geometric cohort into an explicit,
+  auditable language rubric; and an *Apply* pass trains a low-cost
+  classifier on the rubric-judged sample to label the full cohort at
+  near-zero marginal cost. The organising idea is the **harness** ---
+  wrapping an unreliable model and a fuzzy human
+  judgement in feedforward guides, feedback sensors, and externalised
+  state so that the combination is reliable --- realised as a
+  progression in which each phase trades deliberately along the axes of
+  precision, cost, and legibility. This paper presents the system's
+  design and methods rather than an empirical evaluation.
+documentclass: article
+fontsize: 11pt
+geometry: "margin=1in"
+colorlinks: true
+linkcolor: "RoyalBlue"
+urlcolor: "RoyalBlue"
+toccolor: "black"
+numbersections: true
+header-includes:
+  - \usepackage{inconsolata}
+  - \usepackage{tikz}
+  - \usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit, backgrounds}
+  - \usepackage{microtype}
+  - \usepackage{booktabs}
+  - \definecolor{RoyalBlue}{HTML}{2A52BE}

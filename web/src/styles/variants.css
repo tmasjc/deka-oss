@@ -1,0 +1,48 @@
+/* Warm Slate theme tokens. Ported from docs/design_handoff_deka_web_ui/variants.css. */
+
+:root {
+  --font-mono: "JetBrains Mono", "SF Mono", "Menlo", "Consolas", monospace;
+  --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-cjk: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+.theme-warm {
+  background: #252128;
+  --bg: #252128;
+  --hdr-bg: #1c1921;
+  --panel: #2a2531;
+  --fg: #e4dfd6;
+  --muted: #918a9b;
+  --divider: #352f3c;
+  --radius: 5px;
+
+  --accent: #d9b382;
+  --accent-glow: rgba(217, 179, 130, 0.35);
+
+  --speaker: #a99ee4;
+
+  --chunk-bg: #1f1c24;
+  --chunk-border: #342e3c;
+
+  --hl-bg: #3d2f3a;
+  --hl-fg: #f3d3b0;
+
+  --chip-bg: #322a38;
+  --chip-fg: #c9a690;
+  --chip-border: #433a4a;
+
+  --pos: #8fc49a;
+  --pos-bg: transparent;
+  --pos-bg-hover: rgba(143, 196, 154, 0.12);
+  --pos-border: #3a4a3f;
+  --pos-glow: rgba(143, 196, 154, 0.35);
+
+  --neg: #e38a9a;
+  --neg-bg: transparent;
+  --neg-bg-hover: rgba(227, 138, 154, 0.12);
+  --neg-border: #4a3741;
+
+  --key-bg: #1a171f;
+  --key-fg: #e4dfd6;
+  --key-border: #433a4a;
+}

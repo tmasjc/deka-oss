@@ -1,0 +1,23 @@
+% F3 — the phase state machine (condensed for legibility)
+\begin{tikzpicture}[
+  font=\small,
+  node distance=8mm,
+  st/.style={draw, rounded corners, align=center, text width=58mm, minimum height=10mm, fill=RoyalBlue!5},
+  gate/.style={midway, right, font=\footnotesize\itshape, text=black!60},
+  arr/.style={-{Stealth}, thick}
+]
+\node[st] (tune) {\textbf{TUNING}\\[1pt] \footnotesize Phase 1 --- probe loop};
+\node[st, below=of tune] (anchor) {\textbf{ANCHOR}\\[1pt] \footnotesize Phase 2 --- FIT-anchored harvest};
+\node[st, below=of anchor] (refine) {\textbf{REFINE}\\[1pt] \footnotesize Phase 3 --- derive $\cdot$ judge $\cdot$ review};
+\node[st, below=of refine] (apply) {\textbf{APPLY}\\[1pt] \footnotesize Phase 4 --- train $\cdot$ calibrate $\cdot$ apply};
+\node[st, below=of apply, fill=green!10] (done) {\textbf{DONE}};
+
+\draw[arr] (tune)   -- node[gate]{triple-gate converged $\cdot$ confirm} (anchor);
+\draw[arr] (anchor) -- node[gate]{if \texttt{refine.enabled} $\cdot$ confirm} (refine);
+\draw[arr] (refine) -- node[gate]{finalize $\cdot$ if \texttt{apply.enabled} $\cdot$ confirm} (apply);
+\draw[arr] (apply)  -- node[gate]{ship} (done);
+
+% per-turn loop while not converged
+\draw[arr] (tune.west) to[out=160, in=200, looseness=4]
+  node[left, font=\footnotesize\itshape, text=black!60]{loop / declined} (tune.west);
+\end{tikzpicture}

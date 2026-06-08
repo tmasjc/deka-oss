@@ -1,0 +1,29 @@
+# scopes.yaml — corpus scopes available to Phase 1 sessions.
+#
+# Each entry maps a human-facing scope label to a Milvus collection
+# AND a Postgres table. At session start, the picker shows the list of
+# `name`s; the chosen scope drives both the search layer's Milvus
+# collection and the chunk-content lookup table for that session.
+#
+# `name` is BOTH the display label AND the stable wire key used in
+# /api/session bodies and SessionSnapshot.scope. Renaming a `name`
+# is a breaking change for in-flight client links — don't rename
+# casually once a deployment is live.
+#
+# `milvus_collection` (required) is the Milvus collection used for
+# retrieval. `postgres_table` (required) is the Postgres table used
+# for chunk-content lookups (Phase 3 rubric judge + the `/api/expand`
+# endpoint). There is no global default in `config.yaml` for either —
+# every scope MUST declare both.
+#
+# This file is the committed template. Copy to `scopes.yaml` (which
+# is gitignored) to add your real scopes; the loader falls back to this
+# file when `scopes.yaml` is absent so a fresh checkout still boots.
+# DEKA_SCOPES_FILE env var overrides the file path at load time.
+#
+# TODO: replace the placeholder below with the real scopes for your deployment.
+scopes:
+  - name: "Sales Chat"
+    description: "Sales chat transcripts (placeholder — replace before deploy)"
+    milvus_collection: sales_chat_chunks
+    postgres_table: sales_chat_chunks
