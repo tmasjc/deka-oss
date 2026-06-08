@@ -25,4 +25,4 @@
 users:
   - id: dev
     token_sha256: "0000000000000000000000000000000000000000000000000000000000000000"
-    # allowed_scopes: ["Parent Full"]
+    # allowed_scopes: ["Sales Chat"]
