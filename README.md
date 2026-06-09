@@ -48,23 +48,17 @@ typesetting options from `metadata.yaml` and the diagrams from `figures/`.
 
 ## Why I Built Deka
 
-Deka grew out of a corpus of customer-conversation transcripts — the recorded
-chat and phone interactions between a business's sales and service staff and its
-customers, merged into one transcript per relationship. Taken together, those
-transcripts encode the operational knowledge of the organisation: how a rep
-answers a customer who balks at the price, how they steer a hesitant one toward
-renewing, which doubts recur, how rapport gets built. The value is real — and it
-was almost entirely inaccessible. The corpus is far too large to read, and it is
-in Chinese, a detail that shapes how it can be searched at all.
+Deka grew out of a corpus of customer-conversation transcripts that encode an
+organisation's operational knowledge — how reps handle objections, build rapport,
+steer renewals — yet sit almost entirely inaccessible: far too large to read, and
+in Chinese.
 
-Unlocking it comes down to a deceptively simple capability: ask a specific
-question and reliably get back the chunks of conversation that answer it. The
-hard part is that deciding whether a retrieved chunk *genuinely* answers a query
-is a judgement only a domain expert can make — yet that expert should not have to
-understand cosine metrics, rank fusion, or index probe widths to make it. Deka is
-the harness that resolves that asymmetry: the machine owns the retrieval
-mechanics, the human owns the judgement, and the four phases above turn a handful
-of expert verdicts into a label on every relevant chunk in the corpus.
+Unlocking it means asking a question and reliably getting back the chunks that
+answer it. The hard part: only a domain expert can judge whether a chunk
+*genuinely* fits — but that expert shouldn't need to understand cosine metrics or
+rank fusion to do so. Deka is the harness that resolves the asymmetry — the
+machine owns the retrieval mechanics, the human owns the judgement — turning a
+handful of expert verdicts into a label on every relevant chunk in the corpus.
 
 ## Setup
 
