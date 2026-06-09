@@ -24,6 +24,119 @@ flowchart LR
 
 See [`whitepaper/whitepaper.md`](whitepaper/whitepaper.md) for the full design.
 
+## Why I Built Deka
+
+Deka grew out of a corpus of customer-conversation transcripts — the recorded
+chat and phone interactions between a business's sales and service staff and its
+customers, merged into one transcript per relationship. Taken together, those
+transcripts encode the operational knowledge of the organisation: how a rep
+answers a customer who balks at the price, how they steer a hesitant one toward
+renewing, which doubts recur, how rapport gets built. The value is real — and it
+was almost entirely inaccessible. The corpus is far too large to read, and it is
+in Chinese, a detail that shapes how it can be searched at all.
+
+Unlocking it comes down to a deceptively simple capability: ask a specific
+question and reliably get back the chunks of conversation that answer it. The
+hard part is that deciding whether a retrieved chunk *genuinely* answers a query
+is a judgement only a domain expert can make — yet that expert should not have to
+understand cosine metrics, rank fusion, or index probe widths to make it. Deka is
+the harness that resolves that asymmetry: the machine owns the retrieval
+mechanics, the human owns the judgement, and the four phases above turn a handful
+of expert verdicts into a label on every relevant chunk in the corpus.
+
+## Setup
+
+### Prerequisites
+
+Build tools:
+
+- **[uv](https://docs.astral.sh/uv/) + Python 3.11+** — backend
+- **Node.js 18+** — web UI
+
+Live retrieval also needs these services:
+
+- **Milvus** — vector store for chunk embeddings
+- **Embeddings service** — produces dense + learned-sparse vectors
+- **OpenRouter-compatible LLM** — reflection, rubric, judging
+- **PostgreSQL** *(optional)* — original-content lookup
+
+How they wire together:
+
+```mermaid
+flowchart TD
+    UI["Web UI<br/><i>React + Vite</i>"] <-->|HTTP + cookie session| API["Deka backend<br/><i>FastAPI · deka-web</i>"]
+
+    API -->|embed query / spans| EMB["Embeddings service<br/><i>dense + learned-sparse</i>"]
+    API -->|vector search · RRF fusion| MIL[("Milvus<br/><i>chunk vectors</i>")]
+    API -->|reflect · derive rubric · judge| LLM["OpenRouter-compatible LLM"]
+    API -.->|original-content lookup<br/><i>optional</i>| PG[("PostgreSQL<br/><i>source transcripts</i>")]
+
+    EMB -.->|writes vectors| MIL
+```
+
+### 1. Install dependencies
+
+```bash
+uv sync
+```
+
+### 2. Configure
+
+Copy each template to its real name, then edit:
+
+```bash
+cp .env.example          .env
+cp config.yaml.example   config.yaml
+cp scopes.yaml.example   scopes.yaml
+cp users.yaml.example    users.yaml
+```
+
+| File | What to set |
+| --- | --- |
+| `.env` | `OPENROUTER_API_KEY` |
+| `config.yaml` | `search.embed_url`, `milvus_uri`, `postgres.dsn` → your services |
+| `scopes.yaml` | each scope → its Milvus collection + Postgres table |
+| `users.yaml` | a web user (next step) |
+
+### 3. Create a login token
+
+The web UI gates every request on a signed-cookie session keyed to `users.yaml`.
+Generate a token and store **only its SHA-256**:
+
+```bash
+python -c "import secrets,hashlib; t=secrets.token_hex(32); print('token: ',t); print('sha256:',hashlib.sha256(t.encode()).hexdigest())"
+```
+
+- Put the `sha256` under a user `id` in `users.yaml`; keep the `token` to log in.
+- *(Optional)* persist sessions across backend restarts:
+  ```bash
+  export DEKA_SESSION_SECRET=$(python -c "import secrets;print(secrets.token_urlsafe(32))")
+  ```
+
+## Run the web app
+
+Start the backend and the frontend in two terminals:
+
+```bash
+# Terminal 1 — FastAPI backend (http://127.0.0.1:8787)
+uv run deka-web
+
+# Terminal 2 — Vite dev server (http://localhost:5173)
+cd web && npm install && npm run dev
+```
+
+Open <http://localhost:5173> and sign in with the token from step 3.
+
+> **Single-server alternative:** `cd web && npm install && npm run build`, then
+> `uv run deka-web` serves the built UI directly at <http://127.0.0.1:8787>.
+
+## Development
+
+```bash
+uv run pytest        # run the test suite
+uv run ruff check .  # lint
+```
+
 ## File structure
 
 ```
@@ -55,64 +168,3 @@ See [`whitepaper/whitepaper.md`](whitepaper/whitepaper.md) for the full design.
 
 The `*.example` files are templates; copy each to its real name (gitignored) to
 override it. Loaders fall back to the example when the real file is absent.
-
-## Setup
-
-### Prerequisites
-
-- **Python 3.11+** and [`uv`](https://docs.astral.sh/uv/)
-- **Node.js 18+** (for the web UI)
-- For live retrieval: a **Milvus** instance, an **embeddings service** returning
-  dense + learned-sparse vectors, an **OpenRouter-compatible LLM** endpoint, and
-  (optional) **PostgreSQL** for original-content lookup.
-
-### 1. Install dependencies
-
-```bash
-uv sync
-```
-
-### 2. Configure
-
-```bash
-cp .env.example .env                 # set OPENROUTER_API_KEY
-cp config.yaml.example config.yaml   # point search.embed_url / milvus_uri and postgres.dsn at your services
-cp scopes.yaml.example scopes.yaml   # map each scope to your Milvus collection + Postgres table
-cp users.yaml.example users.yaml     # add a web user (next step)
-```
-
-### 3. Create a login token
-
-The web UI gates every request on a signed-cookie session keyed to `users.yaml`.
-Generate a token and store **only its SHA-256**:
-
-```bash
-python -c "import secrets,hashlib; t=secrets.token_hex(32); print('token: ',t); print('sha256:',hashlib.sha256(t.encode()).hexdigest())"
-```
-
-Put the `sha256` under a user `id` in `users.yaml`; keep the `token` to log in.
-Optionally `export DEKA_SESSION_SECRET=$(python -c "import secrets;print(secrets.token_urlsafe(32))")` so sessions survive a backend restart.
-
-## Run the web app
-
-Start the backend and the frontend in two terminals:
-
-```bash
-# Terminal 1 — FastAPI backend (http://127.0.0.1:8787)
-uv run deka-web
-
-# Terminal 2 — Vite dev server (http://localhost:5173)
-cd web && npm install && npm run dev
-```
-
-Open <http://localhost:5173> and sign in with the token from step 3.
-
-> **Single-server alternative:** `cd web && npm install && npm run build`, then
-> `uv run deka-web` serves the built UI directly at <http://127.0.0.1:8787>.
-
-## Development
-
-```bash
-uv run pytest        # run the test suite
-uv run ruff check .  # lint
-```
