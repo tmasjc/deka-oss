@@ -17,10 +17,10 @@ flowchart LR
 
 | Phase | What happens |
 | --- | --- |
-| **1. Probe** | Interactively tune hybrid (dense + learned-sparse) retrieval until the operator's relevance judgements converge. |
-| **2. Harvest** | Treat the validated FIT examples as a query and sweep the corpus for their embedding neighbourhood. |
-| **3. Refine** | Distil that geometric cohort into an explicit, auditable language rubric, then judge a stratified sample with an LLM. |
-| **4. Apply** | Train a low-cost classifier on the rubric-judged sample to label the full cohort at near-zero marginal cost. |
+| **1.&nbsp;Probe** | Interactively tune hybrid (dense + learned-sparse) retrieval until the operator's relevance judgements converge. |
+| **2.&nbsp;Harvest** | Treat the validated FIT examples as a query and sweep the corpus for their embedding neighbourhood. |
+| **3.&nbsp;Refine** | Distil that geometric cohort into an explicit, auditable language rubric, then judge a stratified sample with an LLM. |
+| **4.&nbsp;Apply** | Train a low-cost classifier on the rubric-judged sample to label the full cohort at near-zero marginal cost. |
 
 ## Learning the core idea
 
