@@ -401,9 +401,7 @@ def run_search(
             # reflects what the gate actually filtered, not the slice that
             # follows.
             pre_rows = len(rows)
-            rows = [
-                r for r in rows if _char_count(r.chunk_content) >= _MIN_CHUNK_CHARS
-            ]
+            rows = [r for r in rows if _char_count(r.chunk_content) >= _MIN_CHUNK_CHARS]
             filtered_short_chunk = pre_rows - len(rows)
             rows = rows[: attempt_config.top_k]
 
@@ -836,9 +834,7 @@ def _build_drop_previews(
     for dropped in active_paths:
         remaining = {p: r for p, r in rankings.items() if p != dropped}
         fused_pool = rrf_merge(remaining, rrf_k=rrf_k, top_k=fused_limit)
-        previews[dropped] = _apply_post_rrf_gates(
-            fused_pool, entities_by_pk, top_k
-        )
+        previews[dropped] = _apply_post_rrf_gates(fused_pool, entities_by_pk, top_k)
     return previews
 
 

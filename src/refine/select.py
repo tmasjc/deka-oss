@@ -57,8 +57,7 @@ def select_diverse(
         raise ValueError(f"k must be positive, got {k}")
     if len(items) != len(embeddings):
         raise ValueError(
-            f"items / embeddings length mismatch: "
-            f"{len(items)} vs {len(embeddings)}"
+            f"items / embeddings length mismatch: {len(items)} vs {len(embeddings)}"
         )
     if not items:
         return []
@@ -67,9 +66,7 @@ def select_diverse(
 
     mat = np.asarray(embeddings, dtype=np.float64)
     if mat.ndim != 2:
-        raise ValueError(
-            f"embeddings must be a 2-D matrix, got shape {mat.shape}"
-        )
+        raise ValueError(f"embeddings must be a 2-D matrix, got shape {mat.shape}")
 
     # L2-normalise once; cosine distance reduces to 1 - x·y on unit
     # vectors. Guard against zero-norm rows (degenerate embedding —

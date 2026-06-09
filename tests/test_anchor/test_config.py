@@ -172,9 +172,7 @@ def test_radius_scheme_rejects_unknown_value(tmp_path: Path) -> None:
 
 
 def test_radius_scheme_rejects_non_string(tmp_path: Path) -> None:
-    body = _COMPLETE_SECTION.replace(
-        "radius_scheme: per_fit", "radius_scheme: 42"
-    )
+    body = _COMPLETE_SECTION.replace("radius_scheme: per_fit", "radius_scheme: 42")
     with pytest.raises(AnchorError, match="radius_scheme"):
         load_harvest_config(_write_yaml(tmp_path, body))
 

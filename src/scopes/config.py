@@ -71,9 +71,7 @@ class ScopeRegistry:
         for scope in self.scopes:
             if scope.name == name:
                 return scope
-        raise ScopeError(
-            f"Unknown scope {name!r}; available: {self.names()}"
-        )
+        raise ScopeError(f"Unknown scope {name!r}; available: {self.names()}")
 
     def __iter__(self):
         return iter(self.scopes)
@@ -113,50 +111,37 @@ def load_scopes(path: Path | None = None) -> ScopeRegistry:
     except yaml.YAMLError as exc:
         raise ScopeError(f"Invalid YAML in {resolved}: {exc}") from exc
     if not isinstance(raw, dict):
-        raise ScopeError(
-            f"{resolved}: top-level mapping with key 'scopes' required"
-        )
+        raise ScopeError(f"{resolved}: top-level mapping with key 'scopes' required")
     if "scopes" not in raw:
-        raise ScopeError(
-            f"{resolved}: missing top-level 'scopes' key"
-        )
+        raise ScopeError(f"{resolved}: missing top-level 'scopes' key")
     entries = raw["scopes"]
     if not isinstance(entries, list) or not entries:
-        raise ScopeError(
-            f"{resolved}: 'scopes' must be a non-empty list"
-        )
+        raise ScopeError(f"{resolved}: 'scopes' must be a non-empty list")
 
     scopes: list[Scope] = []
     seen: set[str] = set()
     for index, entry in enumerate(entries):
         if not isinstance(entry, dict):
-            raise ScopeError(
-                f"{resolved}: scopes[{index}] must be a mapping"
-            )
+            raise ScopeError(f"{resolved}: scopes[{index}] must be a mapping")
         missing = _REQUIRED_ENTRY_KEYS - entry.keys()
         if missing:
             raise ScopeError(
-                f"{resolved}: scopes[{index}] missing required keys: "
-                f"{sorted(missing)}"
+                f"{resolved}: scopes[{index}] missing required keys: {sorted(missing)}"
             )
         unknown = entry.keys() - _ALLOWED_ENTRY_KEYS
         if unknown:
             raise ScopeError(
-                f"{resolved}: scopes[{index}] has unknown keys: "
-                f"{sorted(unknown)}"
+                f"{resolved}: scopes[{index}] has unknown keys: {sorted(unknown)}"
             )
         for key in _REQUIRED_ENTRY_KEYS:
             value = entry[key]
             if not isinstance(value, str) or not value.strip():
                 raise ScopeError(
-                    f"{resolved}: scopes[{index}].{key} must be a "
-                    f"non-empty string"
+                    f"{resolved}: scopes[{index}].{key} must be a non-empty string"
                 )
         name = entry["name"]
         if name in seen:
-            raise ScopeError(
-                f"{resolved}: duplicate scope name {name!r}"
-            )
+            raise ScopeError(f"{resolved}: duplicate scope name {name!r}")
         seen.add(name)
         scopes.append(
             Scope(

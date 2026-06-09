@@ -56,7 +56,7 @@ users:
     token_sha256: "{sha}"
     allowed_scopes: ["Parent Full"]
   - id: bob
-    token_sha256: "{_sha('b')}"
+    token_sha256: "{_sha("b")}"
 """,
     )
     registry = load_users(
@@ -95,7 +95,7 @@ def test_get_unknown_id_raises(tmp_path: Path) -> None:
         f"""
 users:
   - id: alice
-    token_sha256: "{_sha('x')}"
+    token_sha256: "{_sha("x")}"
 """,
     )
     registry = load_users(path, scope_registry=_scope_registry("Parent Full"))
@@ -126,9 +126,9 @@ def test_rejects_duplicate_id(tmp_path: Path) -> None:
         f"""
 users:
   - id: alice
-    token_sha256: "{_sha('a')}"
+    token_sha256: "{_sha("a")}"
   - id: alice
-    token_sha256: "{_sha('b')}"
+    token_sha256: "{_sha("b")}"
 """,
     )
     with pytest.raises(UserAuthError, match="duplicate user id 'alice'"):
@@ -141,7 +141,7 @@ def test_rejects_unknown_top_level_keys(tmp_path: Path) -> None:
         f"""
 users:
   - id: alice
-    token_sha256: "{_sha('a')}"
+    token_sha256: "{_sha("a")}"
     role: admin
 """,
     )
@@ -155,7 +155,7 @@ def test_rejects_blank_id(tmp_path: Path) -> None:
         f"""
 users:
   - id: "   "
-    token_sha256: "{_sha('a')}"
+    token_sha256: "{_sha("a")}"
 """,
     )
     with pytest.raises(UserAuthError, match="must be a non-empty string"):
@@ -173,9 +173,7 @@ users:
 """,
         )
         with pytest.raises(UserAuthError, match="64-char lowercase hex"):
-            load_users(
-                path, scope_registry=_scope_registry("Parent Full")
-            )
+            load_users(path, scope_registry=_scope_registry("Parent Full"))
 
 
 def test_normalises_uppercase_sha_no_wait_rejects(tmp_path: Path) -> None:
@@ -188,7 +186,7 @@ def test_normalises_uppercase_sha_no_wait_rejects(tmp_path: Path) -> None:
         f"""
 users:
   - id: alice
-    token_sha256: "{_sha('a').upper()}"
+    token_sha256: "{_sha("a").upper()}"
 """,
     )
     with pytest.raises(UserAuthError, match="64-char lowercase hex"):
@@ -201,7 +199,7 @@ def test_rejects_allowed_scopes_not_in_registry(tmp_path: Path) -> None:
         f"""
 users:
   - id: alice
-    token_sha256: "{_sha('a')}"
+    token_sha256: "{_sha("a")}"
     allowed_scopes: ["Bogus", "Parent Full"]
 """,
     )
@@ -215,7 +213,7 @@ def test_rejects_empty_allowed_scopes_list(tmp_path: Path) -> None:
         f"""
 users:
   - id: alice
-    token_sha256: "{_sha('a')}"
+    token_sha256: "{_sha("a")}"
     allowed_scopes: []
 """,
     )
@@ -229,7 +227,7 @@ def test_rejects_duplicate_allowed_scope(tmp_path: Path) -> None:
         f"""
 users:
   - id: alice
-    token_sha256: "{_sha('a')}"
+    token_sha256: "{_sha("a")}"
     allowed_scopes: ["Parent Full", "Parent Full"]
 """,
     )

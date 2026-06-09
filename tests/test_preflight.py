@@ -51,16 +51,19 @@ def _sha(s: str) -> str:
 
 def _users() -> UserRegistry:
     return UserRegistry(
-        users=(
-            User(id="alice", token_sha256=_sha(_ALICE_TOKEN), allowed_scopes=None),
-        )
+        users=(User(id="alice", token_sha256=_sha(_ALICE_TOKEN), allowed_scopes=None),)
     )
 
 
 def _scopes() -> ScopeRegistry:
     return ScopeRegistry(
         scopes=(
-            Scope(name=_SCOPE, description="d", milvus_collection=_COLLECTION, postgres_table=_COLLECTION),
+            Scope(
+                name=_SCOPE,
+                description="d",
+                milvus_collection=_COLLECTION,
+                postgres_table=_COLLECTION,
+            ),
         )
     )
 
@@ -132,9 +135,7 @@ def test_embed_service_fails_on_request_exception(
 
 def test_embed_service_fails_when_url_missing() -> None:
     ctx = _ctx(
-        load_section_fn=lambda section: {"search": {"embed_url": ""}}.get(
-            section, {}
-        )
+        load_section_fn=lambda section: {"search": {"embed_url": ""}}.get(section, {})
     )
     r = check_embed_service(ctx)
     assert r.status == "fail"
@@ -222,9 +223,7 @@ def test_postgres_fail_unreachable(monkeypatch: pytest.MonkeyPatch) -> None:
             connect_timeout=5,
         ),
     )
-    r = check_postgres(
-        _ctx(postgres_probe=lambda cfg: (False, "connection refused"))
-    )
+    r = check_postgres(_ctx(postgres_probe=lambda cfg: (False, "connection refused")))
     assert r.status == "fail"
     assert r.code == "POSTGRES_UNREACHABLE"
 
@@ -279,12 +278,8 @@ def test_run_preflight_returns_results_in_canonical_order(
 def test_first_failure_returns_first_in_order() -> None:
     checks = [
         PreflightCheckResult(name="a", status="ok", detail=""),
-        PreflightCheckResult(
-            name="b", status="fail", detail="bad", code="X"
-        ),
-        PreflightCheckResult(
-            name="c", status="fail", detail="also bad", code="Y"
-        ),
+        PreflightCheckResult(name="b", status="fail", detail="bad", code="X"),
+        PreflightCheckResult(name="c", status="fail", detail="also bad", code="Y"),
     ]
     f = first_failure(checks)
     assert f is not None
@@ -346,9 +341,7 @@ def test_preflight_endpoint_returns_200_when_all_pass(
     monkeypatch.setattr(app_module, "run_preflight", lambda ctx: all_ok)
 
     alice = _client(app)
-    res = alice.post(
-        "/api/session/preflight", json={"scope": _SCOPE}
-    )
+    res = alice.post("/api/session/preflight", json={"scope": _SCOPE})
     assert res.status_code == 200, res.text
     body = res.json()
     assert body["all_passed"] is True
@@ -362,9 +355,7 @@ def test_preflight_endpoint_returns_400_with_typed_body_on_failure(
     mixed = [
         PreflightCheckResult(name="prompts", status="ok", detail="4/4"),
         PreflightCheckResult(name="users.yaml", status="ok", detail="1 user"),
-        PreflightCheckResult(
-            name="scopes.yaml", status="ok", detail="1 scope"
-        ),
+        PreflightCheckResult(name="scopes.yaml", status="ok", detail="1 scope"),
         PreflightCheckResult(
             name="embed_service",
             status="fail",
@@ -385,9 +376,7 @@ def test_preflight_endpoint_returns_400_with_typed_body_on_failure(
     monkeypatch.setattr(app_module, "run_preflight", lambda ctx: mixed)
 
     alice = _client(app)
-    res = alice.post(
-        "/api/session/preflight", json={"scope": _SCOPE}
-    )
+    res = alice.post("/api/session/preflight", json={"scope": _SCOPE})
     assert res.status_code == 400, res.text
     body = res.json()["detail"]
     assert body["code"] == "EMBED_UNREACHABLE"
@@ -428,9 +417,7 @@ def test_preflight_endpoint_failure_includes_env_var_for_missing_key(
     monkeypatch.setattr(app_module, "run_preflight", lambda ctx: mixed)
 
     alice = _client(app)
-    res = alice.post(
-        "/api/session/preflight", json={"scope": _SCOPE}
-    )
+    res = alice.post("/api/session/preflight", json={"scope": _SCOPE})
     assert res.status_code == 400, res.text
     body = res.json()["detail"]
     assert body["code"] == "MISSING_LLM_KEY"
@@ -440,16 +427,12 @@ def test_preflight_endpoint_failure_includes_env_var_for_missing_key(
 
 def test_preflight_endpoint_unknown_scope_returns_422(app) -> None:
     alice = _client(app)
-    res = alice.post(
-        "/api/session/preflight", json={"scope": "Bogus Scope"}
-    )
+    res = alice.post("/api/session/preflight", json={"scope": "Bogus Scope"})
     assert res.status_code == 422
 
 
 def test_preflight_endpoint_requires_auth(app) -> None:
-    res = TestClient(app).post(
-        "/api/session/preflight", json={"scope": _SCOPE}
-    )
+    res = TestClient(app).post("/api/session/preflight", json={"scope": _SCOPE})
     assert res.status_code == 401
 
 

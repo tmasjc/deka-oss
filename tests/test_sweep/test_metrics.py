@@ -124,9 +124,7 @@ def test_not_fit_gate_unmet_not_converged():
 
 def test_not_fit_gate_just_below_floor_not_converged():
     """One NOT_FIT short of the floor still fails the gate."""
-    rows = _rows(
-        n_fit=CONVERGENCE_MIN_FIT, n_not_fit=CONVERGENCE_MIN_NOT_FIT - 1
-    )
+    rows = _rows(n_fit=CONVERGENCE_MIN_FIT, n_not_fit=CONVERGENCE_MIN_NOT_FIT - 1)
     session = _session(
         [_turn(precision=CONVERGENCE_PRECISION, turn_number=1, rows=rows)]
     )
@@ -147,12 +145,8 @@ def test_cumulative_fit_across_turns():
 
 def test_cumulative_not_fit_across_turns():
     """NOT_FITs accumulate across turns the same way FITs do."""
-    rows_t1 = _rows(
-        n_fit=CONVERGENCE_MIN_FIT, n_not_fit=1, pk_start=1
-    )
-    rows_t2 = _rows(
-        n_fit=0, n_not_fit=CONVERGENCE_MIN_NOT_FIT - 1, pk_start=500
-    )
+    rows_t1 = _rows(n_fit=CONVERGENCE_MIN_FIT, n_not_fit=1, pk_start=1)
+    rows_t2 = _rows(n_fit=0, n_not_fit=CONVERGENCE_MIN_NOT_FIT - 1, pk_start=500)
     session = _session(
         [
             _turn(precision=CONVERGENCE_PRECISION, turn_number=1, rows=rows_t1),

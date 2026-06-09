@@ -51,8 +51,10 @@ class StratifiedSample:
     selected: list[SampledRecord]
     auto_drop: list[SampledRecord]  # known intruders short-circuited
     decile_boundaries: list[float]  # length == n_bins + 1
-    per_decile_count: list[int]     # population size per bin (all eligible records)
-    per_decile_drawn: list[int]     # actual draws per bin (sums to len(selected) + len(auto_drop))
+    per_decile_count: list[int]  # population size per bin (all eligible records)
+    per_decile_drawn: list[
+        int
+    ]  # actual draws per bin (sums to len(selected) + len(auto_drop))
     excluded_pks: frozenset[PrimaryKey] = field(default_factory=frozenset)
 
 
@@ -80,9 +82,7 @@ def load_phase2_records(runs_dir: Path, session_id: str) -> list[Phase2Record]:
         try:
             entry = json.loads(line)
         except json.JSONDecodeError as exc:
-            raise RefineLoadError(
-                f"{path} line {line_num} malformed: {exc}"
-            ) from exc
+            raise RefineLoadError(f"{path} line {line_num} malformed: {exc}") from exc
         if "pk" not in entry or "nearest_fit_distance" not in entry:
             raise RefineLoadError(
                 f"{path} line {line_num} missing required field "
@@ -213,9 +213,7 @@ def _slice_into_bins(
     return bins
 
 
-def _decile_boundaries(
-    sorted_records: list[Phase2Record], n_bins: int
-) -> list[float]:
+def _decile_boundaries(sorted_records: list[Phase2Record], n_bins: int) -> list[float]:
     """Return ``n_bins + 1`` distance boundaries.
 
     boundary[0] is the min distance, boundary[n_bins] is the max,

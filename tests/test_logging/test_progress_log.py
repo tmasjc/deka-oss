@@ -344,10 +344,7 @@ def test_log_event_does_not_disturb_canonical_when_log_turn_also_runs(
     # the per-turn details record (always written by log_turn).
     assert len(canonical_lines) == 1
     assert len(details_lines) == 2
-    assert (
-        json.loads(details_lines[0])["kind"]
-        == "path_drop_recommendation_decision"
-    )
+    assert json.loads(details_lines[0])["kind"] == "path_drop_recommendation_decision"
 
 
 def test_log_converged_writes_event_row(tmp_path: Path) -> None:

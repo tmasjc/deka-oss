@@ -443,7 +443,9 @@ def test_legacy_bm25_active_paths_rejected(tmp_path: Path) -> None:
         config={"active_paths": ["bm25", "dense", "sparse"]},
     )
     sid = _write_legacy_session(tmp_path, entry)
-    with pytest.raises(ReplayLoadError, match=r"Turn 1: legacy 'bm25' in 'active_paths'"):
+    with pytest.raises(
+        ReplayLoadError, match=r"Turn 1: legacy 'bm25' in 'active_paths'"
+    ):
         load_session(sid, runs_dir=tmp_path)
 
 
@@ -452,7 +454,9 @@ def test_legacy_bm25_in_scores_rejected(tmp_path: Path) -> None:
         results_scores={"dense": 0.8, "sparse": 0.0, "bm25": 0.0},
     )
     sid = _write_legacy_session(tmp_path, entry)
-    with pytest.raises(ReplayLoadError, match=r"Turn 1: legacy 'bm25' in 'scores.bm25'"):
+    with pytest.raises(
+        ReplayLoadError, match=r"Turn 1: legacy 'bm25' in 'scores.bm25'"
+    ):
         load_session(sid, runs_dir=tmp_path)
 
 

@@ -55,15 +55,15 @@ class TestDualSpanExtractor:
             {"span_line_indices": [2, 3], "reason": "B picks 2,3"}
         )
         cache = SpanCache(tmp_path / "span_cache.jsonl")
-        primary = _make_extractor(tmp_path, model="vendor-a", client=client_a, cache=cache)
+        primary = _make_extractor(
+            tmp_path, model="vendor-a", client=client_a, cache=cache
+        )
         secondary = _make_extractor(
             tmp_path, model="vendor-b", client=client_b, cache=cache
         )
         dual = DualSpanExtractor(primary, secondary)
 
-        result = dual.extract(
-            query="q", chunk_content="a\nb\nc\nd", prior_fit_spans=[]
-        )
+        result = dual.extract(query="q", chunk_content="a\nb\nc\nd", prior_fit_spans=[])
 
         assert result.span_line_indices == [1, 2, 3]
         assert "[primary]" in result.reason
@@ -83,7 +83,9 @@ class TestDualSpanExtractor:
             {"span_line_indices": [1, 3, 5], "reason": "B"}
         )
         cache = SpanCache(tmp_path / "span_cache.jsonl")
-        primary = _make_extractor(tmp_path, model="vendor-a", client=client_a, cache=cache)
+        primary = _make_extractor(
+            tmp_path, model="vendor-a", client=client_a, cache=cache
+        )
         secondary = _make_extractor(
             tmp_path, model="vendor-b", client=client_b, cache=cache
         )
@@ -105,15 +107,15 @@ class TestDualSpanExtractor:
             {"span_line_indices": [1], "reason": "B alone"}
         )
         cache = SpanCache(tmp_path / "span_cache.jsonl")
-        primary = _make_extractor(tmp_path, model="vendor-a", client=client_a, cache=cache)
+        primary = _make_extractor(
+            tmp_path, model="vendor-a", client=client_a, cache=cache
+        )
         secondary = _make_extractor(
             tmp_path, model="vendor-b", client=client_b, cache=cache
         )
         dual = DualSpanExtractor(primary, secondary)
 
-        result = dual.extract(
-            query="q", chunk_content="a\nb\nc", prior_fit_spans=[]
-        )
+        result = dual.extract(query="q", chunk_content="a\nb\nc", prior_fit_spans=[])
         assert result.span_line_indices == [1]
         # Primary exhausted its 2-attempt budget; secondary called once.
         assert client_a.chat.completions.create.call_count == 2
@@ -127,15 +129,15 @@ class TestDualSpanExtractor:
         client_b = MagicMock()
         client_b.chat.completions.create.side_effect = RuntimeError("rate limit")
         cache = SpanCache(tmp_path / "span_cache.jsonl")
-        primary = _make_extractor(tmp_path, model="vendor-a", client=client_a, cache=cache)
+        primary = _make_extractor(
+            tmp_path, model="vendor-a", client=client_a, cache=cache
+        )
         secondary = _make_extractor(
             tmp_path, model="vendor-b", client=client_b, cache=cache
         )
         dual = DualSpanExtractor(primary, secondary)
 
-        result = dual.extract(
-            query="q", chunk_content="a\nb\nc", prior_fit_spans=[]
-        )
+        result = dual.extract(query="q", chunk_content="a\nb\nc", prior_fit_spans=[])
         assert result.span_line_indices == [0]
         assert client_a.chat.completions.create.call_count == 1
         assert client_b.chat.completions.create.call_count == 2
@@ -146,7 +148,9 @@ class TestDualSpanExtractor:
         client_b = MagicMock()
         client_b.chat.completions.create.side_effect = RuntimeError("b-down")
         cache = SpanCache(tmp_path / "span_cache.jsonl")
-        primary = _make_extractor(tmp_path, model="vendor-a", client=client_a, cache=cache)
+        primary = _make_extractor(
+            tmp_path, model="vendor-a", client=client_a, cache=cache
+        )
         secondary = _make_extractor(
             tmp_path, model="vendor-b", client=client_b, cache=cache
         )
@@ -171,7 +175,9 @@ class TestDualSpanExtractor:
         client_b = MagicMock()
         client_b.chat.completions.create.side_effect = slow_response
         cache = SpanCache(tmp_path / "span_cache.jsonl")
-        primary = _make_extractor(tmp_path, model="vendor-a", client=client_a, cache=cache)
+        primary = _make_extractor(
+            tmp_path, model="vendor-a", client=client_a, cache=cache
+        )
         secondary = _make_extractor(
             tmp_path, model="vendor-b", client=client_b, cache=cache
         )
@@ -196,7 +202,9 @@ class TestDualSpanExtractor:
             {"span_line_indices": [1], "reason": "B"}
         )
         cache = SpanCache(tmp_path / "span_cache.jsonl")
-        primary = _make_extractor(tmp_path, model="vendor-a", client=client_a, cache=cache)
+        primary = _make_extractor(
+            tmp_path, model="vendor-a", client=client_a, cache=cache
+        )
         secondary = _make_extractor(
             tmp_path, model="vendor-b", client=client_b, cache=cache
         )
@@ -225,7 +233,9 @@ class TestDualSpanExtractor:
             {"span_line_indices": [1], "reason": "B"}
         )
         cache = SpanCache(tmp_path / "span_cache.jsonl")
-        primary = _make_extractor(tmp_path, model="vendor-a", client=client_a, cache=cache)
+        primary = _make_extractor(
+            tmp_path, model="vendor-a", client=client_a, cache=cache
+        )
         secondary = _make_extractor(
             tmp_path, model="vendor-b", client=client_b, cache=cache
         )
@@ -272,15 +282,15 @@ class TestDualSpanExtractor:
             {"span_line_indices": [1], "reason": "secondary says beta"}
         )
         cache = SpanCache(tmp_path / "span_cache.jsonl")
-        primary = _make_extractor(tmp_path, model="vendor-a", client=client_a, cache=cache)
+        primary = _make_extractor(
+            tmp_path, model="vendor-a", client=client_a, cache=cache
+        )
         secondary = _make_extractor(
             tmp_path, model="vendor-b", client=client_b, cache=cache
         )
         dual = DualSpanExtractor(primary, secondary)
 
-        result = dual.extract(
-            query="q", chunk_content="a\nb\nc", prior_fit_spans=[]
-        )
+        result = dual.extract(query="q", chunk_content="a\nb\nc", prior_fit_spans=[])
         assert "primary says alpha" in result.reason
         assert "secondary says beta" in result.reason
 
@@ -288,9 +298,7 @@ class TestDualSpanExtractor:
         # The static derive_span_text passes through to the
         # single-extractor implementation — no surprises for the
         # _TurnExtractSpan caller.
-        assert (
-            DualSpanExtractor.derive_span_text("a\nb\nc", [0, 2]) == "a\nc"
-        )
+        assert DualSpanExtractor.derive_span_text("a\nb\nc", [0, 2]) == "a\nc"
 
 
 class TestDefaultFactoryWiring:

@@ -38,16 +38,19 @@ def _sha(s: str) -> str:
 
 def _users() -> UserRegistry:
     return UserRegistry(
-        users=(
-            User(id="alice", token_sha256=_sha(_TOKEN), allowed_scopes=None),
-        )
+        users=(User(id="alice", token_sha256=_sha(_TOKEN), allowed_scopes=None),)
     )
 
 
 def _scopes() -> ScopeRegistry:
     return ScopeRegistry(
         scopes=(
-            Scope(name=_SCOPE, description="d", milvus_collection="c1", postgres_table="c1"),
+            Scope(
+                name=_SCOPE,
+                description="d",
+                milvus_collection="c1",
+                postgres_table="c1",
+            ),
         )
     )
 
@@ -127,9 +130,7 @@ def client_and_store(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
 
 
 def _start_then_mark_read_only(client: TestClient, store: SessionStore) -> str:
-    res = client.post(
-        "/api/session", json={"query": "q", "scope": _SCOPE}
-    )
+    res = client.post("/api/session", json={"query": "q", "scope": _SCOPE})
     sid = res.json()["session_id"]
     store.get(sid).read_only = True
     return sid

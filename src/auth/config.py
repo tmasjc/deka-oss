@@ -76,9 +76,7 @@ class UserRegistry:
         for user in self.users:
             if user.id == user_id:
                 return user
-        raise UserAuthError(
-            f"Unknown user id {user_id!r}; available: {self.ids()}"
-        )
+        raise UserAuthError(f"Unknown user id {user_id!r}; available: {self.ids()}")
 
     def find_by_token_sha(self, sha: str) -> User | None:
         """Return the user whose ``token_sha256`` matches, or ``None``.
@@ -139,16 +137,12 @@ def load_users(
     except yaml.YAMLError as exc:
         raise UserAuthError(f"Invalid YAML in {resolved}: {exc}") from exc
     if not isinstance(raw, dict):
-        raise UserAuthError(
-            f"{resolved}: top-level mapping with key 'users' required"
-        )
+        raise UserAuthError(f"{resolved}: top-level mapping with key 'users' required")
     if "users" not in raw:
         raise UserAuthError(f"{resolved}: missing top-level 'users' key")
     entries = raw["users"]
     if not isinstance(entries, list) or not entries:
-        raise UserAuthError(
-            f"{resolved}: 'users' must be a non-empty list"
-        )
+        raise UserAuthError(f"{resolved}: 'users' must be a non-empty list")
 
     if scope_registry is None:
         scope_registry = load_scopes()
@@ -158,28 +152,23 @@ def load_users(
     seen: set[str] = set()
     for index, entry in enumerate(entries):
         if not isinstance(entry, dict):
-            raise UserAuthError(
-                f"{resolved}: users[{index}] must be a mapping"
-            )
+            raise UserAuthError(f"{resolved}: users[{index}] must be a mapping")
         missing = _REQUIRED_KEYS - entry.keys()
         if missing:
             raise UserAuthError(
-                f"{resolved}: users[{index}] missing required keys: "
-                f"{sorted(missing)}"
+                f"{resolved}: users[{index}] missing required keys: {sorted(missing)}"
             )
         unknown = entry.keys() - _KNOWN_KEYS
         if unknown:
             raise UserAuthError(
-                f"{resolved}: users[{index}] has unknown keys: "
-                f"{sorted(unknown)}"
+                f"{resolved}: users[{index}] has unknown keys: {sorted(unknown)}"
             )
 
         for key in ("id", "token_sha256"):
             value = entry[key]
             if not isinstance(value, str) or not value.strip():
                 raise UserAuthError(
-                    f"{resolved}: users[{index}].{key} must be a "
-                    f"non-empty string"
+                    f"{resolved}: users[{index}].{key} must be a non-empty string"
                 )
 
         user_id = entry["id"]
@@ -196,9 +185,7 @@ def load_users(
             )
 
         if user_id in seen:
-            raise UserAuthError(
-                f"{resolved}: duplicate user id {user_id!r}"
-            )
+            raise UserAuthError(f"{resolved}: duplicate user id {user_id!r}")
         seen.add(user_id)
 
         allowed: tuple[str, ...] | None
@@ -214,10 +201,7 @@ def load_users(
                 )
             seen_scopes: set[str] = set()
             for scope_index, scope_name in enumerate(raw_scopes):
-                if (
-                    not isinstance(scope_name, str)
-                    or not scope_name.strip()
-                ):
+                if not isinstance(scope_name, str) or not scope_name.strip():
                     raise UserAuthError(
                         f"{resolved}: users[{index}]."
                         f"allowed_scopes[{scope_index}] must be a "
@@ -240,9 +224,7 @@ def load_users(
                 seen_scopes.add(scope_name)
             allowed = tuple(raw_scopes)
 
-        users.append(
-            User(id=user_id, token_sha256=token_sha, allowed_scopes=allowed)
-        )
+        users.append(User(id=user_id, token_sha256=token_sha, allowed_scopes=allowed))
 
     return UserRegistry(users=tuple(users))
 

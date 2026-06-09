@@ -52,10 +52,7 @@ def _render(table) -> None:
         content = row.chunk_content.replace("\n", " ")
         if len(content) > 120:
             content = content[:120] + "..."
-        scores = (
-            f"dense={row.scores['dense']:.4f} "
-            f"sparse={row.scores['sparse']:.4f}"
-        )
+        scores = f"dense={row.scores['dense']:.4f} sparse={row.scores['sparse']:.4f}"
         print(f"{row.rank:>2}. {row.chunk_id}  paths=[{paths}]  {scores}")
         print(f"     {content}")
     print("-" * 78)

@@ -57,9 +57,9 @@ def test_round_trip_parses_back_to_input():
     assert [(f.pk, f.span_text) for f in parsed.fit_examples] == [
         (f.pk, f.span_text) for f in meta.fit_examples
     ]
-    assert [
-        (n.pk, n.span_text, n.fails) for n in parsed.not_fit_examples
-    ] == [(n.pk, n.span_text, n.fails) for n in meta.not_fit_examples]
+    assert [(n.pk, n.span_text, n.fails) for n in parsed.not_fit_examples] == [
+        (n.pk, n.span_text, n.fails) for n in meta.not_fit_examples
+    ]
     assert parsed.query == meta.query
 
 

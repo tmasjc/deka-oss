@@ -35,7 +35,9 @@ def _config() -> SearchConfig:
 
 
 def _scope() -> Scope:
-    return Scope(name="Foo", description="d", milvus_collection="c1", postgres_table="c1")
+    return Scope(
+        name="Foo", description="d", milvus_collection="c1", postgres_table="c1"
+    )
 
 
 @pytest.fixture
@@ -106,7 +108,4 @@ def test_attach_seeds_last_activity_so_freshly_resumed_session_isnt_evicted(
     # The factory default for last_activity_ts is "now", so a sweep
     # immediately after attach must not drop the freshly-resumed
     # context.
-    assert (
-        store.evict_idle(threshold_seconds=0.001)
-        == [] != [ctx.state.session_id]
-    )
+    assert store.evict_idle(threshold_seconds=0.001) == [] != [ctx.state.session_id]

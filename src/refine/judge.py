@@ -293,7 +293,7 @@ async def _judge_chunk(
             total_latency_ms += (time.monotonic() - call_start) * 1000.0
             last_error = f"{type(exc).__name__}: {exc}"
             if attempt < cfg.judge_max_retries:
-                wait = (2 ** attempt) * 1.0
+                wait = (2**attempt) * 1.0
                 await asyncio.sleep(wait)
                 continue
             async with counters.lock:
@@ -454,9 +454,7 @@ def _split_rubric(text: str) -> tuple[str, str, str]:
     try:
         return _split_rubric_sections(text)
     except Exception as exc:
-        raise RefineError(
-            f"Locked rubric prompt unparseable: {exc}"
-        ) from exc
+        raise RefineError(f"Locked rubric prompt unparseable: {exc}") from exc
 
 
 def _build_client(cfg: RefineConfig, api_key: str | None) -> AsyncOpenAI:

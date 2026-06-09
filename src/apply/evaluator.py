@@ -199,9 +199,7 @@ def evaluate_via_repeated_kfold(
 
     splitter: StratifiedKFold | RepeatedStratifiedKFold
     if n_repeats == 1:
-        splitter = StratifiedKFold(
-            n_splits=n_splits, shuffle=True, random_state=seed
-        )
+        splitter = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)
     else:
         splitter = RepeatedStratifiedKFold(
             n_splits=n_splits, n_repeats=n_repeats, random_state=seed
@@ -269,9 +267,7 @@ def evaluate_via_repeated_kfold(
     )
 
     # Per-repeat precision at the chosen threshold for cv_precision_mean/std.
-    summary_threshold = (
-        cv_threshold if cv_threshold is not None else threshold
-    )
+    summary_threshold = cv_threshold if cv_threshold is not None else threshold
     per_repeat_precisions: list[float] = []
     for repeat_y, repeat_p in per_repeat_pairs:
         if not repeat_y:

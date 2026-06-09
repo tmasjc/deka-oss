@@ -129,8 +129,12 @@ def test_iterator_output_fields_are_empty():
 
     client = _FakeMilvus(pages)
     retrieve_anchored(
-        fits, T_primes=[0.5], collection="c", client=client,
-        batch_size=500, max_k=500,
+        fits,
+        T_primes=[0.5],
+        collection="c",
+        client=client,
+        batch_size=500,
+        max_k=500,
     )
     assert client.calls[0]["output_fields"] == []
 
@@ -140,8 +144,12 @@ def test_T_primes_length_must_match_fits():
     client = _FakeMilvus(lambda *_a, **_k: [])
     with pytest.raises(ValueError, match="T_primes length"):
         retrieve_anchored(
-            fits, T_primes=[0.5], collection="c", client=client,
-            batch_size=10, max_k=10,
+            fits,
+            T_primes=[0.5],
+            collection="c",
+            client=client,
+            batch_size=10,
+            max_k=10,
         )
 
 
@@ -169,8 +177,12 @@ def test_retrieve_filters_by_T_prime():
 
     client = _FakeMilvus(pages)
     result = retrieve_anchored(
-        fits, T_primes=[0.25, 0.25], collection="c", client=client,
-        batch_size=500, max_k=500,
+        fits,
+        T_primes=[0.25, 0.25],
+        collection="c",
+        client=client,
+        batch_size=500,
+        max_k=500,
     )
 
     assert isinstance(result, RetrievalResult)
@@ -189,14 +201,18 @@ def test_filter_at_ingest_never_materialises_over_threshold():
 
     def pages(q, coll, bs, flt):
         return [
-            [_hit("keep", sim=0.99)],       # d=0.01
-            [_hit("drop", sim=0.01)],       # d=0.99  > T'
+            [_hit("keep", sim=0.99)],  # d=0.01
+            [_hit("drop", sim=0.01)],  # d=0.99  > T'
         ]
 
     client = _FakeMilvus(pages)
     result = retrieve_anchored(
-        fits, T_primes=[0.10], collection="c", client=client,
-        batch_size=10, max_k=100,
+        fits,
+        T_primes=[0.10],
+        collection="c",
+        client=client,
+        batch_size=10,
+        max_k=100,
     )
 
     assert [c.pk for c in result.candidates] == ["keep"]
@@ -208,12 +224,16 @@ def test_retrieve_union_dedupe_keeps_minimum():
     def pages(q, coll, bs, flt):
         if q == [1.0, 0.0]:
             return [[_hit("shared", sim=0.80)]]  # d=0.20
-        return [[_hit("shared", sim=0.95)]]      # d=0.05
+        return [[_hit("shared", sim=0.95)]]  # d=0.05
 
     client = _FakeMilvus(pages)
     result = retrieve_anchored(
-        fits, T_primes=[0.30, 0.30], collection="c", client=client,
-        batch_size=10, max_k=10,
+        fits,
+        T_primes=[0.30, 0.30],
+        collection="c",
+        client=client,
+        batch_size=10,
+        max_k=10,
     )
 
     assert len(result.candidates) == 1
@@ -236,8 +256,12 @@ def test_per_fit_T_prime_applied_independently():
 
     client = _FakeMilvus(pages)
     result = retrieve_anchored(
-        fits, T_primes=[0.05, 0.50], collection="c", client=client,
-        batch_size=10, max_k=10,
+        fits,
+        T_primes=[0.05, 0.50],
+        collection="c",
+        client=client,
+        batch_size=10,
+        max_k=10,
     )
 
     assert len(result.candidates) == 1
@@ -255,15 +279,19 @@ def test_attribution_is_min_raw_distance():
     def pages(q, coll, bs, flt):
         if q == [1.0, 0.0]:
             return [[_hit("shared", sim=0.70)]]  # d=0.30
-        return [[_hit("shared", sim=0.95)]]      # d=0.05
+        return [[_hit("shared", sim=0.95)]]  # d=0.05
 
     client = _FakeMilvus(pages)
     # fA has a very loose T'; fB has a modest T'. Both admit the chunk.
     # The winner is fB (smaller raw distance), even though fA's T'
     # admits with more slack.
     result = retrieve_anchored(
-        fits, T_primes=[0.99, 0.10], collection="c", client=client,
-        batch_size=10, max_k=10,
+        fits,
+        T_primes=[0.99, 0.10],
+        collection="c",
+        client=client,
+        batch_size=10,
+        max_k=10,
     )
     assert len(result.candidates) == 1
     c = result.candidates[0]
@@ -285,15 +313,19 @@ def test_anchor_candidate_records_qualifying_fit_set():
 
     def pages(q, coll, bs, flt):
         if q == [1.0, 0.0]:
-            return [[_hit("shared", sim=0.95)]]      # admitted by fA
+            return [[_hit("shared", sim=0.95)]]  # admitted by fA
         if q == [0.0, 1.0]:
-            return [[_hit("shared", sim=0.90)]]      # admitted by fB
+            return [[_hit("shared", sim=0.90)]]  # admitted by fB
         return [[_hit("only-fC-private", sim=0.99)]]  # fC misses "shared"
 
     client = _FakeMilvus(pages)
     result = retrieve_anchored(
-        fits, T_primes=[0.20, 0.20, 0.20], collection="c", client=client,
-        batch_size=10, max_k=10,
+        fits,
+        T_primes=[0.20, 0.20, 0.20],
+        collection="c",
+        client=client,
+        batch_size=10,
+        max_k=10,
     )
 
     by_pk = {c.pk: c for c in result.candidates}
@@ -320,8 +352,12 @@ def test_retrieve_excludes_fit_own_pks():
 
     client = _FakeMilvus(pages)
     result = retrieve_anchored(
-        fits, T_primes=[0.5], collection="c", client=client,
-        batch_size=10, max_k=10,
+        fits,
+        T_primes=[0.5],
+        collection="c",
+        client=client,
+        batch_size=10,
+        max_k=10,
     )
     assert {c.pk for c in result.candidates} == {"other"}
 
@@ -343,8 +379,12 @@ def test_stopping_rule_halts_on_page_crossing_T_prime():
 
     client = _FakeMilvus(pages)
     result = retrieve_anchored(
-        fits, T_primes=[0.15], collection="c", client=client,
-        batch_size=10, max_k=100,
+        fits,
+        T_primes=[0.15],
+        collection="c",
+        client=client,
+        batch_size=10,
+        max_k=100,
     )
 
     pks = {c.pk for c in result.candidates}
@@ -371,8 +411,12 @@ def test_stopping_rule_natural_exhaustion():
 
     client = _FakeMilvus(pages)
     result = retrieve_anchored(
-        fits, T_primes=[0.20], collection="c", client=client,
-        batch_size=10, max_k=100,
+        fits,
+        T_primes=[0.20],
+        collection="c",
+        client=client,
+        batch_size=10,
+        max_k=100,
     )
     assert not result.per_fit_pages[0].budget_exhausted
     # Iterator called once for the page, once more returning [] to
@@ -404,8 +448,12 @@ def test_max_k_halts_loop_and_flags_budget_exhausted():
 
     client = _FakeMilvus(pages)
     result = retrieve_anchored(
-        fits, T_primes=[0.50], collection="c", client=client,
-        batch_size=10, max_k=25,
+        fits,
+        T_primes=[0.50],
+        collection="c",
+        client=client,
+        batch_size=10,
+        max_k=25,
     )
 
     fit_pages = result.per_fit_pages[0]
@@ -423,8 +471,12 @@ def test_max_k_below_batch_size_rejected():
 
     with pytest.raises(ValueError, match="max_k"):
         retrieve_anchored(
-            fits, T_primes=[0.5], collection="c", client=client,
-            batch_size=1000, max_k=500,
+            fits,
+            T_primes=[0.5],
+            collection="c",
+            client=client,
+            batch_size=1000,
+            max_k=500,
         )
 
 
@@ -447,6 +499,10 @@ def test_milvus_error_wrapped_as_anchor_retrieval():
 
     with pytest.raises(AnchorRetrievalError, match="search_iterator"):
         retrieve_anchored(
-            fits, T_primes=[0.5], collection="c", client=_BoomClient(),
-            batch_size=10, max_k=100,
+            fits,
+            T_primes=[0.5],
+            collection="c",
+            client=_BoomClient(),
+            batch_size=10,
+            max_k=100,
         )

@@ -501,8 +501,7 @@ def run_anchor(
             gated_candidates = list(retrieval.candidates)
         else:
             gated_candidates = [
-                c for c in retrieval.candidates
-                if c.qualifying_fit_count >= f_config
+                c for c in retrieval.candidates if c.qualifying_fit_count >= f_config
             ]
         kept = len(gated_candidates)
         dropped = pre_gate_count - kept
@@ -554,8 +553,7 @@ def run_anchor(
             if n_discard_dropped:
                 _emit(
                     progress,
-                    f"Filtered {n_discard_dropped} DISCARD pk(s) from "
-                    "harvest output.",
+                    f"Filtered {n_discard_dropped} DISCARD pk(s) from harvest output.",
                 )
 
         # Replace the retrieval result with the gated candidate list
@@ -580,16 +578,13 @@ def run_anchor(
                 "fit_pk": fit.pk,
                 "fit_chunk_id": fit.chunk_id,
                 "own_chunk_retained": (
-                    retrieval.qualifying_count_by_pk.get(fit.pk, 0)
-                    >= f_config
+                    retrieval.qualifying_count_by_pk.get(fit.pk, 0) >= f_config
                 ),
             }
             for fit in inputs.fits
         ]
         if not dry_run:
-            missing = [
-                r for r in cohort_consistency if not r["own_chunk_retained"]
-            ]
+            missing = [r for r in cohort_consistency if not r["own_chunk_retained"]]
             if missing:
                 _emit(
                     progress,

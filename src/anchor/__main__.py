@@ -115,18 +115,12 @@ def main(argv: list[str] | None = None) -> int:
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
 
-    scheme_override = (
-        RadiusScheme(args.radius_scheme) if args.radius_scheme else None
-    )
+    scheme_override = RadiusScheme(args.radius_scheme) if args.radius_scheme else None
 
     runs_dir = Path(args.runs_dir)
-    session_id, overrides_runs_dir = _resolve_overrides_location(
-        args.session, runs_dir
-    )
+    session_id, overrides_runs_dir = _resolve_overrides_location(args.session, runs_dir)
     try:
-        overrides = load_session_overrides(
-            session_id, overrides_runs_dir, user_id=None
-        )
+        overrides = load_session_overrides(session_id, overrides_runs_dir, user_id=None)
     except ConfigFileError as exc:
         log.warning(
             "session overrides sidecar unreadable for %s: %s "
@@ -171,16 +165,14 @@ def main(argv: list[str] | None = None) -> int:
     if recovery.verdict == "FLAGGED":
         missed = [(p.fit_pk, p.fit_chunk_id) for p in recovery.missed_fits]
         print(
-            "  WARNING: LOO verdict FLAGGED — review missed FITs: "
-            f"{missed}",
+            f"  WARNING: LOO verdict FLAGGED — review missed FITs: {missed}",
             file=sys.stderr,
         )
     dropped = result.quality_gate_dropped
     if dropped:
         n_orig = len(dropped) + result.calibration.n_fit
         print(
-            f"{_YELLOW}QUALITY GATE dropped {len(dropped)}/{n_orig} "
-            f"FIT(s):{_RESET}",
+            f"{_YELLOW}QUALITY GATE dropped {len(dropped)}/{n_orig} FIT(s):{_RESET}",
             file=sys.stderr,
         )
         for drop_rec in dropped:

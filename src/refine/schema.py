@@ -209,8 +209,7 @@ def make_judge_verdict_model(
                     )
             if list(indices) != sorted(set(indices)):
                 raise ValueError(
-                    "evidence_line_indices must be ascending and unique; "
-                    f"got {indices}"
+                    f"evidence_line_indices must be ascending and unique; got {indices}"
                 )
 
             if self.verdict == "KEEP":

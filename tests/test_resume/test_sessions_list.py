@@ -45,7 +45,9 @@ def _users() -> UserRegistry:
 def _scopes() -> ScopeRegistry:
     return ScopeRegistry(
         scopes=(
-            Scope(name="Foo", description="d", milvus_collection="c1", postgres_table="c1"),
+            Scope(
+                name="Foo", description="d", milvus_collection="c1", postgres_table="c1"
+            ),
         )
     )
 
@@ -113,9 +115,7 @@ def _seed_session(
             )
         )
     if target == "POST_TUNING":
-        lines.append(
-            json.dumps({"event": "converged", "turn": n_turns, "ts": "x"})
-        )
+        lines.append(json.dumps({"event": "converged", "turn": n_turns, "ts": "x"}))
     canonical.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     if target in ("POST_HARVEST", "POST_RUBRIC", "DONE_VIEW"):
@@ -126,18 +126,14 @@ def _seed_session(
         (user_dir / f"{sid}.phase3.rubric.json").write_text(
             json.dumps({"version": 1}), encoding="utf-8"
         )
-        (user_dir / f"{sid}.phase3.evidence.jsonl").write_text(
-            "{}\n", encoding="utf-8"
-        )
+        (user_dir / f"{sid}.phase3.evidence.jsonl").write_text("{}\n", encoding="utf-8")
     if target == "DONE_VIEW":
         (user_dir / f"{sid}.phase3.meta.json").write_text(
             json.dumps({"operator_decision": "agree"}), encoding="utf-8"
         )
         # Phase 4 finalised → DONE_VIEW (without labels.jsonl the
         # classifier would return APPLY_PENDING).
-        (user_dir / f"{sid}.phase4.labels.jsonl").write_text(
-            "{}\n", encoding="utf-8"
-        )
+        (user_dir / f"{sid}.phase4.labels.jsonl").write_text("{}\n", encoding="utf-8")
 
     # Bump mtime to a deterministic value so sort-order tests stay stable.
     if mtime_offset > 0.0:

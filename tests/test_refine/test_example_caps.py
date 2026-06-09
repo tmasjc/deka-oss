@@ -115,8 +115,7 @@ def test_caps_fits_when_pool_exceeds_cap(monkeypatch):
 
         return {
             "dense": [
-                [math.cos(i * 0.6), math.sin(i * 0.6)]
-                for i in range(len(sentences))
+                [math.cos(i * 0.6), math.sin(i * 0.6)] for i in range(len(sentences))
             ]
         }
 
@@ -144,8 +143,7 @@ def test_caps_not_fits_when_pool_exceeds_cap(monkeypatch):
 
         return {
             "dense": [
-                [math.cos(i * 0.4), math.sin(i * 0.4)]
-                for i in range(len(sentences))
+                [math.cos(i * 0.4), math.sin(i * 0.4)] for i in range(len(sentences))
             ]
         }
 
@@ -155,9 +153,7 @@ def test_caps_not_fits_when_pool_exceeds_cap(monkeypatch):
     out = _apply_example_caps(inputs, cfg, _search_config())
     assert len(out.fits) == 2
     assert len(out.not_fits) == 3
-    assert captured["sentences"] == [
-        f"chunk content {i}" for i in range(101, 109)
-    ]
+    assert captured["sentences"] == [f"chunk content {i}" for i in range(101, 109)]
 
 
 def test_embed_service_error_raises_refine_error(monkeypatch):
@@ -186,8 +182,7 @@ def test_accepts_bge_m3_dense_embeddings_key(monkeypatch):
 
         return {
             "dense_embeddings": [
-                [math.cos(i * 0.6), math.sin(i * 0.6)]
-                for i in range(len(sentences))
+                [math.cos(i * 0.6), math.sin(i * 0.6)] for i in range(len(sentences))
             ]
         }
 
@@ -227,8 +222,7 @@ def test_loads_default_search_config_when_none_passed(monkeypatch):
 
         return {
             "dense": [
-                [math.cos(i * 0.5), math.sin(i * 0.5)]
-                for i in range(len(sentences))
+                [math.cos(i * 0.5), math.sin(i * 0.5)] for i in range(len(sentences))
             ]
         }
 
@@ -253,9 +247,7 @@ def test_replace_preserves_other_fields():
     pass-through."""
 
     inputs = _inputs(n_fit=2, n_not_fit=2)
-    inputs = replace(
-        inputs, reflection_diagnoses=["foo"], rated_pks=frozenset({1, 2})
-    )
+    inputs = replace(inputs, reflection_diagnoses=["foo"], rated_pks=frozenset({1, 2}))
     cfg = _cfg(max_fit=6, max_not_fit=6)
     out = _apply_example_caps(inputs, cfg, _search_config())
     assert out.reflection_diagnoses == ["foo"]

@@ -61,9 +61,7 @@ def test_seed_is_first_item():
 
 def test_deterministic_for_same_input():
     items = list("abcdefgh")
-    embeds = [
-        [math.cos(i * 0.7), math.sin(i * 0.7)] for i in range(len(items))
-    ]
+    embeds = [[math.cos(i * 0.7), math.sin(i * 0.7)] for i in range(len(items))]
     a = select_diverse(items, embeds, k=4)
     b = select_diverse(items, embeds, k=4)
     assert a == b

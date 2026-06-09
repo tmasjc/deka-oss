@@ -82,10 +82,7 @@ def load_named_fence_sections(
                 msg = f"{path}: missing header '## {header}'"
             else:
                 prev = expected_headers[i - 1]
-                msg = (
-                    f"{path}: missing header '## {header}' "
-                    f"(after '## {prev}')"
-                )
+                msg = f"{path}: missing header '## {header}' (after '## {prev}')"
             raise PromptParseError(msg, path=path)
         offsets.append(idx)
         cursor = idx + 1

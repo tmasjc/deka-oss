@@ -81,6 +81,10 @@ class TestSpanCache:
     def test_second_put_appends(self, tmp_path: Path) -> None:
         cache = SpanCache(tmp_path / "cache.jsonl")
         cache.put(_key(), SpanExtractionResult(span_line_indices=[0], reason="a"))
-        cache.put(_key(query="q2"), SpanExtractionResult(span_line_indices=[1], reason="b"))
-        lines = (tmp_path / "cache.jsonl").read_text(encoding="utf-8").strip().splitlines()
+        cache.put(
+            _key(query="q2"), SpanExtractionResult(span_line_indices=[1], reason="b")
+        )
+        lines = (
+            (tmp_path / "cache.jsonl").read_text(encoding="utf-8").strip().splitlines()
+        )
         assert len(lines) == 2

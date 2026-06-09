@@ -529,7 +529,9 @@ def _default_reflection_factory() -> ReflectionAgent | None:
         return None
 
 
-def _default_extractor_factory(runs_dir: Path, session_id: str) -> SpanExtractorLike | None:
+def _default_extractor_factory(
+    runs_dir: Path, session_id: str
+) -> SpanExtractorLike | None:
     """Construct a span extractor with a per-session SpanCache.
 
     When the extraction config carries the optional ``secondary_*``
@@ -601,13 +603,10 @@ def _try_build_secondary(*, cache: SpanCache) -> SpanExtractor | None:
         )
     except ExtractionError as exc:
         log.warning(
-            "Secondary span extractor unavailable (%s); "
-            "running primary alone.",
+            "Secondary span extractor unavailable (%s); running primary alone.",
             exc,
         )
         return None
     except Exception as exc:  # noqa: BLE001
-        log.warning(
-            "Secondary span extractor construction failed: %s", exc
-        )
+        log.warning("Secondary span extractor construction failed: %s", exc)
         return None

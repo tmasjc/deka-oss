@@ -97,12 +97,16 @@ def session_dir(tmp_path: Path) -> Path:
 
     fit_rows = [
         _result(
-            1, "pk-A", "FIT",
+            1,
+            "pk-A",
+            "FIT",
             span_text="span for A",
             span_line_indices=[0, 1],
         ),
         _result(
-            2, "pk-B", "FIT",
+            2,
+            "pk-B",
+            "FIT",
             span_text="span for B",
             span_line_indices=[1],
         ),
@@ -118,7 +122,9 @@ def session_dir(tmp_path: Path) -> Path:
                     2,
                     [
                         _result(
-                            1, "pk-D", "FIT",
+                            1,
+                            "pk-D",
+                            "FIT",
                             span_text="span for D",
                             span_line_indices=[2, 3],
                         ),

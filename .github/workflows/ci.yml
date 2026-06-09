@@ -35,10 +35,8 @@ jobs:
       - name: Lint (ruff)
         run: uv run ruff check .
 
-      # Format gate is disabled until the existing tree is reformatted.
-      # Run `uv run ruff format .` and commit, then uncomment to enforce.
-      # - name: Format check (ruff)
-      #   run: uv run ruff format --check .
+      - name: Format check (ruff)
+        run: uv run ruff format --check .
 
       - name: Tests (unit only; integration excluded by pyproject markers)
         run: uv run pytest

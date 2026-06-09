@@ -10,8 +10,7 @@ from src.refine.sample import Phase2Record, stratified_sample
 
 def _records(n: int = 200) -> list[Phase2Record]:
     return [
-        Phase2Record(pk=i, nearest_fit_distance=i / n, raw={"pk": i})
-        for i in range(n)
+        Phase2Record(pk=i, nearest_fit_distance=i / n, raw={"pk": i}) for i in range(n)
     ]
 
 

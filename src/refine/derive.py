@@ -153,9 +153,7 @@ def derive_rubric(
     # cacheable prefix. Validation feedback lands after the user task on
     # retry, so the system bytes stay identical across attempts and the
     # bulky context block sits inside the cache region.
-    system_message = (
-        system_instructions + "\n\n# 输入\n\n" + rendered_context
-    )
+    system_message = system_instructions + "\n\n# 输入\n\n" + rendered_context
 
     last_error: str | None = None
     total_latency_ms = 0.0
@@ -185,9 +183,7 @@ def derive_rubric(
         # which helps the meta-prompt's self-validation step actually
         # get exercised. Forwarded via extra_body so non-thinking
         # endpoints (OpenRouter, plain qwen-plus) ignore it harmlessly.
-        extra_body = (
-            {"enable_thinking": True} if cfg.derive_enable_thinking else None
-        )
+        extra_body = {"enable_thinking": True} if cfg.derive_enable_thinking else None
         start = time.perf_counter()
         try:
             response = client.chat.completions.create(
@@ -289,8 +285,7 @@ def _build_metadata_from_derive_output(
     fallback_check = derive_output.checks[0].id
 
     fit_examples = [
-        RubricFitExample(pk=f.pk, span_text=f.span_text)
-        for f in inputs.fits
+        RubricFitExample(pk=f.pk, span_text=f.span_text) for f in inputs.fits
     ]
     not_fit_examples = [
         RubricNotFitExample(
@@ -382,20 +377,14 @@ def parse_rubric_prompt(
 
     enum_match = _FAILED_CHECK_HEADER_RE.search(text)
     if not enum_match:
-        raise RefineParseError(
-            "Missing '## 失败检查枚举: <id>, <id>, ...' line"
-        )
+        raise RefineParseError("Missing '## 失败检查枚举: <id>, <id>, ...' line")
     enum_ids = _split_enum_ids(enum_match.group("ids"))
     if not enum_ids:
-        raise RefineParseError(
-            "'## 失败检查枚举:' line declares no ids"
-        )
+        raise RefineParseError("'## 失败检查枚举:' line declares no ids")
     seen_ids: set[str] = set()
     for cid in enum_ids:
         if not _CHECK_ID_RE.match(cid):
-            raise RefineParseError(
-                f"Check id {cid!r} does not match [a-z][a-z0-9_]*"
-            )
+            raise RefineParseError(f"Check id {cid!r} does not match [a-z][a-z0-9_]*")
         if cid in seen_ids:
             raise RefineParseError(f"Check id {cid!r} declared twice in enum")
         seen_ids.add(cid)
@@ -419,9 +408,7 @@ def parse_rubric_prompt(
                 f"'## 失败检查枚举:' (declared: {sorted(enum_set)})"
             )
         if not body:
-            raise RefineParseError(
-                f"<!-- check_id: {cid} --> block has empty body"
-            )
+            raise RefineParseError(f"<!-- check_id: {cid} --> block has empty body")
         declared_in_blocks.add(cid)
         checks.append(
             RubricCheck(id=cid, description=_strip_leading_dash(body), required=True)
@@ -437,16 +424,13 @@ def parse_rubric_prompt(
     # User message must contain the {numbered_chunk} placeholder verbatim.
     if "{numbered_chunk}" not in user_block:
         raise RefineParseError(
-            "User-message fenced block missing literal {numbered_chunk} "
-            "placeholder"
+            "User-message fenced block missing literal {numbered_chunk} placeholder"
         )
 
     # Query line lives in the context block.
     query_match = _QUERY_LINE_RE.search(context_block)
     if not query_match:
-        raise RefineParseError(
-            "Context fenced block missing '查询: ...' line"
-        )
+        raise RefineParseError("Context fenced block missing '查询: ...' line")
     query = query_match.group("query").strip()
     if not query:
         raise RefineParseError("Query line is empty")
@@ -461,9 +445,7 @@ def parse_rubric_prompt(
                 f"<!-- fit_example: pk={pk_raw} --> block has empty body"
             )
         fit_examples.append(
-            RubricFitExample(
-                pk=_coerce_pk(pk_raw), span_text=_strip_leading_dash(body)
-            )
+            RubricFitExample(pk=_coerce_pk(pk_raw), span_text=_strip_leading_dash(body))
         )
     if not fit_examples:
         raise RefineParseError(
@@ -505,8 +487,7 @@ def parse_rubric_prompt(
     for required_field in ("verdict", "evidence_line_indices", "failed_check"):
         if required_field not in system_block:
             raise RefineParseError(
-                f"System fenced block missing JSON contract field "
-                f"'{required_field}'"
+                f"System fenced block missing JSON contract field '{required_field}'"
             )
 
     metadata = RubricMetadata(
@@ -609,8 +590,7 @@ def _build_client(cfg: RefineConfig, api_key: str | None) -> OpenAI:
     resolved = api_key or os.environ.get(cfg.api_key_env)
     if resolved is None:
         raise RefineError(
-            f"No API key for derive LLM: set {cfg.api_key_env} or pass "
-            "api_key=/client="
+            f"No API key for derive LLM: set {cfg.api_key_env} or pass api_key=/client="
         )
     return OpenAI(api_key=resolved, base_url=cfg.derive_base_url)
 
@@ -657,9 +637,7 @@ def _apply_example_caps(
             not_fit_texts, resolved_search, "NOT_FIT"
         )
         original = len(not_fits)
-        not_fits = select_diverse(
-            not_fits, not_fit_vectors, cfg.max_not_fit_examples
-        )
+        not_fits = select_diverse(not_fits, not_fit_vectors, cfg.max_not_fit_examples)
         log.info(
             "Rubric example cap: kept %d/%d NOT_FITs via farthest-first",
             len(not_fits),
@@ -684,8 +662,7 @@ def _embed_for_selection(
         )
     except EmbeddingServiceError as exc:
         raise RefineError(
-            f"Embedding {label} exemplars for diversity selection "
-            f"failed: {exc}"
+            f"Embedding {label} exemplars for diversity selection failed: {exc}"
         ) from exc
 
     # BGE-M3's /embed-all returns ``dense_embeddings``; legacy/mocks

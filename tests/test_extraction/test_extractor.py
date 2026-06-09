@@ -252,9 +252,7 @@ class TestOutOfRangeIndices:
         extractor = _make_extractor(tmp_path, client)
 
         with pytest.raises(ExtractionError, match="out-of-range"):
-            extractor.extract(
-                query="q", chunk_content="a\nb\nc", prior_fit_spans=[]
-            )
+            extractor.extract(query="q", chunk_content="a\nb\nc", prior_fit_spans=[])
         assert client.chat.completions.create.call_count == 2
         # Cache never receives a malformed result.
         assert extractor.cache_hits == 0
@@ -381,9 +379,7 @@ class TestConstructorPaths:
         with pytest.raises(ExtractionError, match="unknown keys"):
             SpanExtractor(cache=SpanCache(tmp_path / "c"), config_path=cfg)
 
-    def test_loader_accepts_secondary_keys(
-        self, tmp_path: Path, monkeypatch
-    ) -> None:
+    def test_loader_accepts_secondary_keys(self, tmp_path: Path, monkeypatch) -> None:
         """Dual-vendor config with all three ``secondary_*`` keys
         present must load without error and surface
         ``has_secondary == True`` (issue #54)."""

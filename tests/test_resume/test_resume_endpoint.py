@@ -45,7 +45,12 @@ def _users() -> UserRegistry:
 def _scopes() -> ScopeRegistry:
     return ScopeRegistry(
         scopes=(
-            Scope(name=_SCOPE, description="d", milvus_collection="c1", postgres_table="c1"),
+            Scope(
+                name=_SCOPE,
+                description="d",
+                milvus_collection="c1",
+                postgres_table="c1",
+            ),
         )
     )
 
@@ -127,7 +132,9 @@ def _client(app, token: str) -> TestClient:
     return c
 
 
-def _create_then_quit(client: TestClient, monkeypatch_thresholds: pytest.MonkeyPatch) -> str:
+def _create_then_quit(
+    client: TestClient, monkeypatch_thresholds: pytest.MonkeyPatch
+) -> str:
     """Drive a session to convergence + drop the in-memory context.
 
     Lower the convergence thresholds so a single FIT-rated turn
@@ -162,9 +169,7 @@ def _create_then_quit(client: TestClient, monkeypatch_thresholds: pytest.MonkeyP
     # gate (≥1 FIT, ≥1 NOT_FIT) with P@K = 2/3 ≈ 0.67 ≥ 0.5.
     client.post(f"/api/session/{sid}/rate", json={"rank": 1, "rating": "FIT"})
     client.post(f"/api/session/{sid}/rate", json={"rank": 2, "rating": "FIT"})
-    client.post(
-        f"/api/session/{sid}/rate", json={"rank": 3, "rating": "NOT_FIT"}
-    )
+    client.post(f"/api/session/{sid}/rate", json={"rank": 3, "rating": "NOT_FIT"})
     # Advance one turn so the canonical jsonl gains its first row +
     # the converged marker. After this call the session is converged
     # and the harvest-confirm flow would normally fire.
@@ -324,9 +329,7 @@ def _write_phase2_sidecars(
         json.dumps(meta, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
-    with (user_dir / f"{sid}.phase2.jsonl").open(
-        "w", encoding="utf-8"
-    ) as fp:
+    with (user_dir / f"{sid}.phase2.jsonl").open("w", encoding="utf-8") as fp:
         for i, pk in enumerate(retained_pks, start=1):
             fp.write(
                 json.dumps(
@@ -595,18 +598,12 @@ def test_resume_post_rubric_rehydrates_from_disk(
     sid = _create_then_quit(alice, monkeypatch)
 
     user_dir = app.state.store.runs_dir_for("alice")
-    _write_phase2_sidecars(
-        user_dir, sid, retained_pks=["chunk-1", "chunk-2"]
-    )
+    _write_phase2_sidecars(user_dir, sid, retained_pks=["chunk-1", "chunk-2"])
     # Bare phase3 markers — content doesn't matter because we stub
     # ``_build_refine_state`` below; the classifier just needs both
     # files present to route POST_RUBRIC.
-    (user_dir / f"{sid}.phase3.rubric.json").write_text(
-        "{}", encoding="utf-8"
-    )
-    (user_dir / f"{sid}.phase3.evidence.jsonl").write_text(
-        "", encoding="utf-8"
-    )
+    (user_dir / f"{sid}.phase3.rubric.json").write_text("{}", encoding="utf-8")
+    (user_dir / f"{sid}.phase3.evidence.jsonl").write_text("", encoding="utf-8")
 
     monkeypatch.setattr(
         resume_module,
@@ -641,15 +638,9 @@ def test_resume_done_view_rehydrates_from_disk(
     sid = _create_then_quit(alice, monkeypatch)
 
     user_dir = app.state.store.runs_dir_for("alice")
-    _write_phase2_sidecars(
-        user_dir, sid, retained_pks=["chunk-1", "chunk-2"]
-    )
-    (user_dir / f"{sid}.phase3.rubric.json").write_text(
-        "{}", encoding="utf-8"
-    )
-    (user_dir / f"{sid}.phase3.evidence.jsonl").write_text(
-        "", encoding="utf-8"
-    )
+    _write_phase2_sidecars(user_dir, sid, retained_pks=["chunk-1", "chunk-2"])
+    (user_dir / f"{sid}.phase3.rubric.json").write_text("{}", encoding="utf-8")
+    (user_dir / f"{sid}.phase3.evidence.jsonl").write_text("", encoding="utf-8")
     (user_dir / f"{sid}.phase3.meta.json").write_text(
         json.dumps({"operator_decision": "agree"}),
         encoding="utf-8",
@@ -657,9 +648,7 @@ def test_resume_done_view_rehydrates_from_disk(
     # Phase 4 finalised → DONE_VIEW with ``read_only=True``. Without
     # labels.jsonl the classifier returns APPLY_PENDING and resume
     # binds read_only=False (operator can still run Phase 4).
-    (user_dir / f"{sid}.phase4.labels.jsonl").write_text(
-        "{}\n", encoding="utf-8"
-    )
+    (user_dir / f"{sid}.phase4.labels.jsonl").write_text("{}\n", encoding="utf-8")
 
     monkeypatch.setattr(
         resume_module,
@@ -674,9 +663,7 @@ def test_resume_done_view_rehydrates_from_disk(
     assert snap["read_only"] is True
 
     # Mutating endpoint must 409 (read-only enforcement from PR #32).
-    rate = alice.post(
-        f"/api/session/{sid}/rate", json={"rank": 1, "rating": "FIT"}
-    )
+    rate = alice.post(f"/api/session/{sid}/rate", json={"rank": 1, "rating": "FIT"})
     assert rate.status_code == 409, rate.text
 
     # Read-only endpoint still serves the loaded verdicts.
@@ -799,14 +786,11 @@ def _write_phase4_sidecars(
 
     # Labels file: each line a JSON record. Count is what shows up as
     # write_result.n_labels in the rehydrated apply_state view.
-    with (user_dir / f"{sid}.phase4.labels.jsonl").open(
-        "w", encoding="utf-8"
-    ) as fp:
+    with (user_dir / f"{sid}.phase4.labels.jsonl").open("w", encoding="utf-8") as fp:
         for i in range(keep + drop):
             verdict = "KEEP" if i < keep else "DROP"
             fp.write(
-                json.dumps({"pk": f"c-{i}", "verdict": verdict, "p_keep": 0.5})
-                + "\n"
+                json.dumps({"pk": f"c-{i}", "verdict": verdict, "p_keep": 0.5}) + "\n"
             )
 
 
@@ -908,9 +892,7 @@ def test_resume_done_view_surfaces_post_calibrate_metrics(
     eval_payload = json.loads(eval_path.read_text(encoding="utf-8"))
     eval_payload["precision_at_threshold"] = 0.857
     eval_payload["recall_at_threshold"] = 0.308
-    eval_path.write_text(
-        json.dumps(eval_payload, indent=2) + "\n", encoding="utf-8"
-    )
+    eval_path.write_text(json.dumps(eval_payload, indent=2) + "\n", encoding="utf-8")
 
     monkeypatch.setattr(
         resume_module,

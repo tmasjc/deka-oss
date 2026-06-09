@@ -76,9 +76,7 @@ def test_load_named_fence_sections_three(tmp_path):
         "## User\n\n```\nuser body\n```\n",
         encoding="utf-8",
     )
-    sys_, ctx, user = load_named_fence_sections(
-        p, ("System", "Context", "User")
-    )
+    sys_, ctx, user = load_named_fence_sections(p, ("System", "Context", "User"))
     assert sys_ == "sys body"
     assert ctx == "ctx body"
     assert user == "user body"

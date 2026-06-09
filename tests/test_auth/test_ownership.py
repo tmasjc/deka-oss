@@ -153,9 +153,7 @@ def test_unauthenticated_request_returns_401(app) -> None:
 
 def test_alice_creates_session_under_her_subdir(app, tmp_path: Path) -> None:
     alice = _client_for(app, _ALICE_TOKEN)
-    res = alice.post(
-        "/api/session", json={"query": "hello", "scope": _SCOPE}
-    )
+    res = alice.post("/api/session", json={"query": "hello", "scope": _SCOPE})
     assert res.status_code == 200
     sid = res.json()["session_id"]
     # Ownership marker on disk under runs/alice/.
@@ -167,9 +165,9 @@ def test_alice_creates_session_under_her_subdir(app, tmp_path: Path) -> None:
 
 def test_bob_cannot_read_alice_session(app) -> None:
     alice = _client_for(app, _ALICE_TOKEN)
-    sid = alice.post(
-        "/api/session", json={"query": "hello", "scope": _SCOPE}
-    ).json()["session_id"]
+    sid = alice.post("/api/session", json={"query": "hello", "scope": _SCOPE}).json()[
+        "session_id"
+    ]
 
     bob = _client_for(app, _BOB_TOKEN)
     res = bob.get(f"/api/session/{sid}")
@@ -178,14 +176,12 @@ def test_bob_cannot_read_alice_session(app) -> None:
 
 def test_bob_cannot_rate_in_alice_session(app) -> None:
     alice = _client_for(app, _ALICE_TOKEN)
-    sid = alice.post(
-        "/api/session", json={"query": "hello", "scope": _SCOPE}
-    ).json()["session_id"]
+    sid = alice.post("/api/session", json={"query": "hello", "scope": _SCOPE}).json()[
+        "session_id"
+    ]
 
     bob = _client_for(app, _BOB_TOKEN)
-    res = bob.post(
-        f"/api/session/{sid}/rate", json={"rank": 1, "rating": "FIT"}
-    )
+    res = bob.post(f"/api/session/{sid}/rate", json={"rank": 1, "rating": "FIT"})
     assert res.status_code == 403
 
 
@@ -201,8 +197,12 @@ def test_scopes_filtered_when_allowlist_set(
     """A user with a non-None allowed_scopes only sees those entries."""
     full_scopes = ScopeRegistry(
         scopes=(
-            Scope(name="Foo", description="d", milvus_collection="c1", postgres_table="c1"),
-            Scope(name="Bar", description="d", milvus_collection="c2", postgres_table="c2"),
+            Scope(
+                name="Foo", description="d", milvus_collection="c1", postgres_table="c1"
+            ),
+            Scope(
+                name="Bar", description="d", milvus_collection="c2", postgres_table="c2"
+            ),
         )
     )
     users = UserRegistry(
@@ -254,14 +254,16 @@ def test_create_session_blocks_when_scope_not_in_allowlist(
 
     monkeypatch.setattr(app_module, "probe_only", fake_probe)
     monkeypatch.setattr(app_module, "adapt_config", fake_adapt)
-    monkeypatch.setattr(
-        app_module, "run_search", lambda q, c, **_: _table(q, c)
-    )
+    monkeypatch.setattr(app_module, "run_search", lambda q, c, **_: _table(q, c))
 
     full_scopes = ScopeRegistry(
         scopes=(
-            Scope(name="Foo", description="d", milvus_collection="c1", postgres_table="c1"),
-            Scope(name="Bar", description="d", milvus_collection="c2", postgres_table="c2"),
+            Scope(
+                name="Foo", description="d", milvus_collection="c1", postgres_table="c1"
+            ),
+            Scope(
+                name="Bar", description="d", milvus_collection="c2", postgres_table="c2"
+            ),
         )
     )
     users = UserRegistry(

@@ -215,13 +215,9 @@ def _cross_check_span_cache(
         if entry is None:
             continue
         if entry.get("span_text") != fit["span_text"]:
-            log.warning(
-                "Span cache/log drift on chunk %s (log wins)", fit["chunk_id"]
-            )
+            log.warning("Span cache/log drift on chunk %s (log wins)", fit["chunk_id"])
         if list(entry.get("span_line_indices") or []) != fit["span_line_indices"]:
-            log.warning(
-                "Span indices drift on chunk %s (log wins)", fit["chunk_id"]
-            )
+            log.warning("Span indices drift on chunk %s (log wins)", fit["chunk_id"])
 
 
 def _render_pk_literal(pk: PrimaryKey) -> str:
@@ -366,9 +362,7 @@ def load_anchor_inputs(
         # ``session_overrides`` so per-session ``harvest`` overrides
         # (e.g. a relaxed ``precision_at_k``) reach the gate.
         _harvest = load_harvest_config(session_overrides=harvest_overrides)
-        latest_precision = (
-            session.turns[-1].precision if session.turns else 0.0
-        )
+        latest_precision = session.turns[-1].precision if session.turns else 0.0
         cumulative_fit = len(_cumulative_fit_pks(session))
         cumulative_not_fit = len(_cumulative_not_fit_pks(session))
         if (
@@ -401,8 +395,7 @@ def load_anchor_inputs(
         usable.append(row)
     if dropped:
         log.warning(
-            "Dropping %d FIT(s) with empty span fields from the "
-            "Phase 2 anchor set: %s",
+            "Dropping %d FIT(s) with empty span fields from the Phase 2 anchor set: %s",
             len(dropped),
             dropped,
         )
@@ -461,9 +454,7 @@ def load_anchor_inputs(
     # Fresh-embed span texts.
     span_texts = [row["span_text"] for row in fit_rows]
     try:
-        embed_resp = _get_embeddings(
-            span_texts, embed_url, timeout=embed_timeout
-        )
+        embed_resp = _get_embeddings(span_texts, embed_url, timeout=embed_timeout)
     except EmbeddingServiceError as exc:
         raise AnchorLoadError(
             f"Failed to embed FIT spans via {embed_url}: {exc}"

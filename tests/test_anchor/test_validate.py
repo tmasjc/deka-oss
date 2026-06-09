@@ -43,8 +43,15 @@ class _ScriptedClient:
         self.last_kwargs: dict[str, Any] | None = None
 
     def search(
-        self, *, data, collection_name, anns_field, search_params,
-        limit, output_fields, filter=None,
+        self,
+        *,
+        data,
+        collection_name,
+        anns_field,
+        search_params,
+        limit,
+        output_fields,
+        filter=None,
     ):
         self.call_count += 1
         self.last_kwargs = {
@@ -102,19 +109,22 @@ def test_loo_recovery_failed_when_none_recovered():
         _fit("pk-B", [0.9, 0.1], [0.9, 0.1]),
         _fit("pk-C", [0.8, 0.2], [0.8, 0.2]),
     ]
-    script = {
-        tuple(f.span_embedding): [_hit("unrelated", 0.95)] for f in fits
-    }
+    script = {tuple(f.span_embedding): [_hit("unrelated", 0.95)] for f in fits}
     client = _ScriptedClient(script)
 
     result = loo_fit_recovery(
-        fits, collection="c", client=client, max_k=100,
+        fits,
+        collection="c",
+        client=client,
+        max_k=100,
     )
     assert result.recovered == 0
     assert result.verdict == "FAILED"
     assert [p.fit_pk for p in result.missed_fits] == ["pk-A", "pk-B", "pk-C"]
     assert [p.fit_chunk_id for p in result.missed_fits] == [
-        "cid-pk-A", "cid-pk-B", "cid-pk-C",
+        "cid-pk-A",
+        "cid-pk-B",
+        "cid-pk-C",
     ]
     assert not hasattr(result, "missed_fit_chunk_ids")
 
@@ -143,7 +153,10 @@ def test_loo_uses_per_rest_fit_T_prime_filter():
     client = _ScriptedClient(script)
 
     result = loo_fit_recovery(
-        fits, collection="c", client=client, max_k=100,
+        fits,
+        collection="c",
+        client=client,
+        max_k=100,
     )
     # All three rest FITs admit the held-out at d≈0.01 under any
     # realistic T'_rest_j — this confirms the per-rest-FIT filter
@@ -152,10 +165,13 @@ def test_loo_uses_per_rest_fit_T_prime_filter():
 
 
 def test_count_not_fit_intrusions():
-    assert count_not_fit_intrusions(
-        candidate_pks=["a", "b", "c"],
-        not_fit_pks=frozenset({"b", "z"}),
-    ) == 1
+    assert (
+        count_not_fit_intrusions(
+            candidate_pks=["a", "b", "c"],
+            not_fit_pks=frozenset({"b", "z"}),
+        )
+        == 1
+    )
 
 
 def test_loo_uses_single_batched_search():
@@ -170,7 +186,10 @@ def test_loo_uses_single_batched_search():
     client = _ScriptedClient(script)
 
     loo_fit_recovery(
-        fits, collection="c", client=client, max_k=100,
+        fits,
+        collection="c",
+        client=client,
+        max_k=100,
     )
     assert client.call_count == 1
     # N=3 hold-outs × N-1=2 rest spans = 6 flattened vectors.
@@ -202,7 +221,10 @@ def test_loo_limit_clamped_to_milvus_page_cap():
     script = {tuple(f.span_embedding): [_hit(f.pk, 0.99)] for f in fits}
     client = _ScriptedClient(script)
     loo_fit_recovery(
-        fits, collection="c", client=client, max_k=200_000,
+        fits,
+        collection="c",
+        client=client,
+        max_k=200_000,
     )
     assert client.last_kwargs["limit"] == 16384
 
@@ -217,7 +239,10 @@ def test_loo_limit_uses_max_k_when_below_cap():
     script = {tuple(f.span_embedding): [_hit(f.pk, 0.99)] for f in fits}
     client = _ScriptedClient(script)
     loo_fit_recovery(
-        fits, collection="c", client=client, max_k=500,
+        fits,
+        collection="c",
+        client=client,
+        max_k=500,
     )
     assert client.last_kwargs["limit"] == 500
 
@@ -240,7 +265,10 @@ def test_loo_emits_progress_per_slice():
     client = _ScriptedClient(script)
     msgs: list[str] = []
     loo_fit_recovery(
-        fits, collection="c", client=client, max_k=100,
+        fits,
+        collection="c",
+        client=client,
+        max_k=100,
         progress=msgs.append,
     )
     assert any("batched search" in m for m in msgs)
@@ -281,9 +309,7 @@ def test_loo_chunks_vectors_to_avoid_grpc_size_cap(monkeypatch):
     ]
     # Every span recovers every fit pk so every hold-out succeeds —
     # we're testing chunking arithmetic, not the recovery verdict.
-    script = {
-        tuple(f.span_embedding): [_hit(g.pk, 0.99) for g in fits] for f in fits
-    }
+    script = {tuple(f.span_embedding): [_hit(g.pk, 0.99) for g in fits] for f in fits}
 
     class _RecordingClient:
         def __init__(self, script):
@@ -325,5 +351,8 @@ def test_loo_milvus_error_wrapped():
 
     with pytest.raises(AnchorRetrievalError, match="LOO batched search"):
         loo_fit_recovery(
-            fits, collection="c", client=_BoomClient(), max_k=100,
+            fits,
+            collection="c",
+            client=_BoomClient(),
+            max_k=100,
         )

@@ -74,12 +74,8 @@ def test_derive_threshold_prime_fields_and_math():
     # position 2.7 -> 0.2 + 0.7 * 0 = 0.2. Span-to-chunk pairs
     # [0.01, 0.02, 0.03, 0.04] become per-FIT δ_i directly — no median.
     # Each T'_i = T + δ_i.
-    span_vecs = _vecs_with_nearest(
-        nearest_distances=[0.1, 0.1, 0.2, 0.2]
-    )
-    chunk_vecs = _vecs_at_distances(
-        span_vecs, distances=[0.01, 0.02, 0.03, 0.04]
-    )
+    span_vecs = _vecs_with_nearest(nearest_distances=[0.1, 0.1, 0.2, 0.2])
+    chunk_vecs = _vecs_at_distances(span_vecs, distances=[0.01, 0.02, 0.03, 0.04])
 
     r = derive_threshold_prime(span_vecs, chunk_vecs)
 
@@ -104,9 +100,7 @@ def test_derive_threshold_prime_T_prime_out_is_T_plus_min_delta():
     #   median = 0.025
     #   mean   = 0.14
     span_vecs = _vecs_with_nearest(nearest_distances=[0.1, 0.1, 0.2, 0.2])
-    chunk_vecs = _vecs_at_distances(
-        span_vecs, distances=[0.01, 0.02, 0.03, 0.50]
-    )
+    chunk_vecs = _vecs_at_distances(span_vecs, distances=[0.01, 0.02, 0.03, 0.50])
 
     r = derive_threshold_prime(span_vecs, chunk_vecs)
 

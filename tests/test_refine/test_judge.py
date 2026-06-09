@@ -27,7 +27,9 @@ def _meta() -> RubricMetadata:
         meta_prompt_sha256="a" * 64,
         checks=[RubricCheck(id="speech_act", description="A request, not a question.")],
         fit_examples=[RubricFitExample(pk=1, span_text="x")],
-        not_fit_examples=[RubricNotFitExample(pk=2, span_text="y", fails=["speech_act"])],
+        not_fit_examples=[
+            RubricNotFitExample(pk=2, span_text="y", fails=["speech_act"])
+        ],
         prompt_path="r",
         prompt_sha256="b" * 64,
         version=1,
@@ -36,14 +38,25 @@ def _meta() -> RubricMetadata:
 
 def _cfg(*, retries: int = 1) -> RefineConfig:
     return RefineConfig(
-        enabled=True, sample_size=2, n_bins=2, seed=0,
+        enabled=True,
+        sample_size=2,
+        n_bins=2,
+        seed=0,
         meta_prompt_path="harness/prompts/RUBRIC_DERIVE.md",
-        max_fit_examples=6, max_not_fit_examples=6,
-        derive_model="d", derive_base_url="x", derive_temperature=0.2,
-        judge_model="j", judge_base_url="x",
-        judge_concurrency=2, judge_qps_limit=100, judge_tpm_limit=1_000_000,
-        judge_timeout_seconds=30, judge_max_retries=retries,
-        api_key_env="X", auto_drop_known_intruders=True,
+        max_fit_examples=6,
+        max_not_fit_examples=6,
+        derive_model="d",
+        derive_base_url="x",
+        derive_temperature=0.2,
+        judge_model="j",
+        judge_base_url="x",
+        judge_concurrency=2,
+        judge_qps_limit=100,
+        judge_tpm_limit=1_000_000,
+        judge_timeout_seconds=30,
+        judge_max_retries=retries,
+        api_key_env="X",
+        auto_drop_known_intruders=True,
     )
 
 
@@ -104,10 +117,20 @@ def test_basic_keep_drop_mix():
     text = render_rubric_prompt(meta)
 
     keep = json.dumps(
-        {"verdict": "KEEP", "evidence_line_indices": [1], "failed_check": None, "reason": "ok"}
+        {
+            "verdict": "KEEP",
+            "evidence_line_indices": [1],
+            "failed_check": None,
+            "reason": "ok",
+        }
     )
     drop = json.dumps(
-        {"verdict": "DROP", "evidence_line_indices": [2], "failed_check": "speech_act", "reason": "no"}
+        {
+            "verdict": "DROP",
+            "evidence_line_indices": [2],
+            "failed_check": "speech_act",
+            "reason": "no",
+        }
     )
 
     res = asyncio.run(
@@ -131,13 +154,22 @@ def test_schema_failure_then_retry_succeeds():
     # First call: malformed JSON. Second: valid KEEP.
     bad = "not json at all"
     good = json.dumps(
-        {"verdict": "KEEP", "evidence_line_indices": [1], "failed_check": None, "reason": "ok"}
+        {
+            "verdict": "KEEP",
+            "evidence_line_indices": [1],
+            "failed_check": None,
+            "reason": "ok",
+        }
     )
 
     res = asyncio.run(
         run_judge(
             sample=StratifiedSample(
-                selected=[SampledRecord(Phase2Record(pk=10, nearest_fit_distance=0.1, raw={}), 0)],
+                selected=[
+                    SampledRecord(
+                        Phase2Record(pk=10, nearest_fit_distance=0.1, raw={}), 0
+                    )
+                ],
                 auto_drop=[],
                 decile_boundaries=[0.1],
                 per_decile_count=[1],
@@ -163,7 +195,11 @@ def test_schema_failure_exhausts_retries_records_error():
     res = asyncio.run(
         run_judge(
             sample=StratifiedSample(
-                selected=[SampledRecord(Phase2Record(pk=10, nearest_fit_distance=0.1, raw={}), 0)],
+                selected=[
+                    SampledRecord(
+                        Phase2Record(pk=10, nearest_fit_distance=0.1, raw={}), 0
+                    )
+                ],
                 auto_drop=[],
                 decile_boundaries=[0.1],
                 per_decile_count=[1],
@@ -184,12 +220,21 @@ def test_auto_drop_paths_through():
     meta = _meta()
     text = render_rubric_prompt(meta)
     keep = json.dumps(
-        {"verdict": "KEEP", "evidence_line_indices": [1], "failed_check": None, "reason": "ok"}
+        {
+            "verdict": "KEEP",
+            "evidence_line_indices": [1],
+            "failed_check": None,
+            "reason": "ok",
+        }
     )
 
     sample = StratifiedSample(
-        selected=[SampledRecord(Phase2Record(pk=10, nearest_fit_distance=0.1, raw={}), 0)],
-        auto_drop=[SampledRecord(Phase2Record(pk=99, nearest_fit_distance=0.99, raw={}), 1)],
+        selected=[
+            SampledRecord(Phase2Record(pk=10, nearest_fit_distance=0.1, raw={}), 0)
+        ],
+        auto_drop=[
+            SampledRecord(Phase2Record(pk=99, nearest_fit_distance=0.99, raw={}), 1)
+        ],
         decile_boundaries=[0.1, 0.99],
         per_decile_count=[1, 1],
         per_decile_drawn=[1, 1],
@@ -224,12 +269,14 @@ def test_salvages_overlong_evidence_indices(monkeypatch):
     )
 
     # 7 indices, mixed order — should keep first 3 unique, then sort.
-    raw = json.dumps({
-        "verdict": "DROP",
-        "evidence_line_indices": [5, 3, 2, 7, 1, 4, 9],
-        "failed_check": "speech_act",
-        "reason": "too long",
-    })
+    raw = json.dumps(
+        {
+            "verdict": "DROP",
+            "evidence_line_indices": [5, 3, 2, 7, 1, 4, 9],
+            "failed_check": "speech_act",
+            "reason": "too long",
+        }
+    )
     parsed = _parse_verdict(raw, Model)
     assert list(parsed.evidence_line_indices) == [2, 3, 5]
     assert parsed.verdict == "DROP"
@@ -245,12 +292,14 @@ def test_salvages_overlong_with_duplicates(monkeypatch):
         chunk_line_count=20,
         allowed_checks=frozenset({"speech_act"}),
     )
-    raw = json.dumps({
-        "verdict": "KEEP",
-        "evidence_line_indices": [1, 1, 1, 2, 3, 5],
-        "failed_check": None,
-        "reason": "ok",
-    })
+    raw = json.dumps(
+        {
+            "verdict": "KEEP",
+            "evidence_line_indices": [1, 1, 1, 2, 3, 5],
+            "failed_check": None,
+            "reason": "ok",
+        }
+    )
     parsed = _parse_verdict(raw, Model)
     # First three UNIQUE ints in order are [1, 2, 3] → sorted = [1, 2, 3].
     assert list(parsed.evidence_line_indices) == [1, 2, 3]
@@ -265,11 +314,13 @@ def test_length_3_or_less_passes_through_untouched(monkeypatch):
         chunk_line_count=20,
         allowed_checks=frozenset({"speech_act"}),
     )
-    raw = json.dumps({
-        "verdict": "KEEP",
-        "evidence_line_indices": [2, 4],
-        "failed_check": None,
-        "reason": "ok",
-    })
+    raw = json.dumps(
+        {
+            "verdict": "KEEP",
+            "evidence_line_indices": [2, 4],
+            "failed_check": None,
+            "reason": "ok",
+        }
+    )
     parsed = _parse_verdict(raw, Model)
     assert list(parsed.evidence_line_indices) == [2, 4]

@@ -166,8 +166,7 @@ def check_prompts(ctx: PreflightContext) -> PreflightCheckResult:
             ),
         )
     missing = [
-        name for name in _REQUIRED_PROMPT_FILES
-        if not (prompts_dir / name).is_file()
+        name for name in _REQUIRED_PROMPT_FILES if not (prompts_dir / name).is_file()
     ]
     if missing:
         return _fail(
@@ -321,9 +320,7 @@ def _default_postgres_probe(pg_cfg: Any) -> tuple[bool, str]:
             with conn.cursor() as cur:
                 cur.execute("SELECT 1")
                 cur.fetchone()
-                cur.execute(
-                    "SELECT to_regclass(%s) IS NOT NULL", (pg_cfg.table,)
-                )
+                cur.execute("SELECT to_regclass(%s) IS NOT NULL", (pg_cfg.table,))
                 row = cur.fetchone()
                 table_exists = bool(row and row[0])
     except psycopg.Error as exc:

@@ -431,9 +431,7 @@ def hydrate_post_tuning(
     except ReplayLoadError as exc:
         raise ResumeError(f"Could not load canonical log for {sid}: {exc}") from exc
     scope = _read_scope_from_canonical(canonical)
-    state = _build_state_from_replay(
-        replay, scope=scope, user_runs_dir=user_runs_dir
-    )
+    state = _build_state_from_replay(replay, scope=scope, user_runs_dir=user_runs_dir)
     return store.attach(state, user_id=user_id, read_only=False)
 
 
@@ -602,7 +600,9 @@ def _reconstruct_anchor_result(replay: ReplaySession):
             float(raw_cutoff) if raw_cutoff is not None else None
         )
     elif quality_gate_median_pre > 1e-3 and quality_gate_multiplier > 0:
-        quality_gate_multiplier_cutoff = quality_gate_multiplier * quality_gate_median_pre
+        quality_gate_multiplier_cutoff = (
+            quality_gate_multiplier * quality_gate_median_pre
+        )
     else:
         quality_gate_multiplier_cutoff = None
 
@@ -664,9 +664,7 @@ def hydrate_post_harvest(
     """
     replay = _load_replay(sid, user_runs_dir)
     scope = _read_scope_from_canonical(replay.canonical_path)
-    state = _build_state_from_replay(
-        replay, scope=scope, user_runs_dir=user_runs_dir
-    )
+    state = _build_state_from_replay(replay, scope=scope, user_runs_dir=user_runs_dir)
     anchor_result = _reconstruct_anchor_result(replay)
     state.set_phase("ANCHOR_DONE")
     ctx = store.attach(state, user_id=user_id, read_only=False)
@@ -872,9 +870,7 @@ def hydrate_post_rubric(
     """
     replay = _load_replay(sid, user_runs_dir)
     scope = _read_scope_from_canonical(replay.canonical_path)
-    state = _build_state_from_replay(
-        replay, scope=scope, user_runs_dir=user_runs_dir
-    )
+    state = _build_state_from_replay(replay, scope=scope, user_runs_dir=user_runs_dir)
     anchor_result = _reconstruct_anchor_result(replay)
     refine_state = _build_refine_state(replay, user_runs_dir=user_runs_dir)
     state.refine_state = refine_state
@@ -1008,9 +1004,7 @@ def hydrate_done_view(
 
     replay = _load_replay(sid, user_runs_dir)
     scope = _read_scope_from_canonical(replay.canonical_path)
-    state = _build_state_from_replay(
-        replay, scope=scope, user_runs_dir=user_runs_dir
-    )
+    state = _build_state_from_replay(replay, scope=scope, user_runs_dir=user_runs_dir)
     anchor_result = _reconstruct_anchor_result(replay)
     refine_state = _build_refine_state(replay, user_runs_dir=user_runs_dir)
 

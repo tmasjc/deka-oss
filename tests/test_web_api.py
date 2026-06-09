@@ -83,7 +83,9 @@ def _base_config() -> SearchConfig:
     )
 
 
-def _fake_table(query: str, config: SearchConfig, *, prefix: str = "t1") -> EvidenceTable:
+def _fake_table(
+    query: str, config: SearchConfig, *, prefix: str = "t1"
+) -> EvidenceTable:
     rows = [
         EvidenceRow(
             rank=i,
@@ -169,9 +171,7 @@ def client(monkeypatch: pytest.MonkeyPatch, tmp_path):
     test_client = TestClient(app)
     # Authenticate once at fixture time so every request the test
     # makes carries the cookie.
-    res = test_client.post(
-        "/api/auth/login", json={"token": _TEST_USER_TOKEN}
-    )
+    res = test_client.post("/api/auth/login", json={"token": _TEST_USER_TOKEN})
     assert res.status_code == 200, (
         f"test fixture login failed: {res.status_code} {res.text}"
     )
@@ -211,9 +211,7 @@ def test_start_session_returns_snapshot(client: TestClient) -> None:
 
 
 def test_empty_query_rejected(client: TestClient) -> None:
-    r = client.post(
-        "/api/session", json={"query": "   ", "scope": _TEST_SCOPE_NAME}
-    )
+    r = client.post("/api/session", json={"query": "   ", "scope": _TEST_SCOPE_NAME})
     assert r.status_code == 400
 
 
@@ -224,9 +222,7 @@ def test_missing_scope_rejected(client: TestClient) -> None:
 
 
 def test_unknown_scope_rejected(client: TestClient) -> None:
-    r = client.post(
-        "/api/session", json={"query": "hello", "scope": "Bogus Scope"}
-    )
+    r = client.post("/api/session", json={"query": "hello", "scope": "Bogus Scope"})
     assert r.status_code == 422
     detail = r.json()["detail"]
     assert "Bogus Scope" in detail
@@ -237,9 +233,7 @@ def test_start_session_applies_scope_collection_to_config(
     client: TestClient,
 ) -> None:
     """The chosen scope's milvus_collection drives SearchConfig.collection."""
-    r = client.post(
-        "/api/session", json={"query": "hello", "scope": _TEST_SCOPE_NAME}
-    )
+    r = client.post("/api/session", json={"query": "hello", "scope": _TEST_SCOPE_NAME})
     assert r.status_code == 200
     assert r.json()["scope"] == _TEST_SCOPE_NAME
     captured = client.captured_configs  # type: ignore[attr-defined]
@@ -291,9 +285,7 @@ def test_rate_with_discard(client: TestClient) -> None:
         "/api/session", json={"query": "q", "scope": _TEST_SCOPE_NAME}
     ).json()["session_id"]
 
-    r = client.post(
-        f"/api/session/{sid}/rate", json={"rank": 1, "rating": "DISCARD"}
-    )
+    r = client.post(f"/api/session/{sid}/rate", json={"rank": 1, "rating": "DISCARD"})
     assert r.status_code == 200, r.text
     assert r.json()["table"]["rows"][0]["rating"] == "DISCARD"
 
@@ -302,10 +294,7 @@ def test_rate_with_discard(client: TestClient) -> None:
         json={"path": "sparse", "rank_in_path": 1, "rating": "DISCARD"},
     )
     assert r.status_code == 200, r.text
-    assert (
-        r.json()["table"]["per_path_candidates"]["sparse"][0]["rating"]
-        == "DISCARD"
-    )
+    assert r.json()["table"]["per_path_candidates"]["sparse"][0]["rating"] == "DISCARD"
 
 
 def test_precision_excludes_discard(client: TestClient) -> None:
@@ -317,12 +306,8 @@ def test_precision_excludes_discard(client: TestClient) -> None:
     ).json()["session_id"]
 
     client.post(f"/api/session/{sid}/rate", json={"rank": 1, "rating": "FIT"})
-    client.post(
-        f"/api/session/{sid}/rate", json={"rank": 2, "rating": "NOT_FIT"}
-    )
-    client.post(
-        f"/api/session/{sid}/rate", json={"rank": 3, "rating": "DISCARD"}
-    )
+    client.post(f"/api/session/{sid}/rate", json={"rank": 2, "rating": "NOT_FIT"})
+    client.post(f"/api/session/{sid}/rate", json={"rank": 3, "rating": "DISCARD"})
 
     r = client.post(f"/api/session/{sid}/turn/next")
     assert r.status_code == 200, r.text
@@ -354,9 +339,7 @@ def test_full_turn_advance(client: TestClient) -> None:
 
     # Rate every row + candidate.
     for rank in (1, 2, 3):
-        client.post(
-            f"/api/session/{sid}/rate", json={"rank": rank, "rating": "FIT"}
-        )
+        client.post(f"/api/session/{sid}/rate", json={"rank": rank, "rating": "FIT"})
     client.post(
         f"/api/session/{sid}/rate",
         json={"path": "sparse", "rank_in_path": 1, "rating": "NOT_FIT"},
@@ -411,6 +394,7 @@ def test_progress_endpoint_reaches_extracting_spans(
     monkeypatch: pytest.MonkeyPatch, client: TestClient
 ) -> None:
     """When extract_span is wired, run_search emits extracting_spans with a total."""
+
     # Replace run_search with a version that invokes on_stage like the real one.
     def fake_run_search(query, config, **kwargs):  # noqa: ANN001
         on_stage = kwargs.get("on_stage")
@@ -480,9 +464,7 @@ def test_end_session(client: TestClient) -> None:
     assert r.status_code == 404
 
 
-def test_discard_session_removes_files(
-    client: TestClient, tmp_path: Path
-) -> None:
+def test_discard_session_removes_files(client: TestClient, tmp_path: Path) -> None:
     sid = client.post(
         "/api/session", json={"query": "q", "scope": _TEST_SCOPE_NAME}
     ).json()["session_id"]
@@ -541,9 +523,7 @@ def test_config_edit_locked_after_first_turn(client: TestClient) -> None:
 
     # Complete turn 1, advance to turn 2.
     for rank in (1, 2, 3):
-        client.post(
-            f"/api/session/{sid}/rate", json={"rank": rank, "rating": "FIT"}
-        )
+        client.post(f"/api/session/{sid}/rate", json={"rank": rank, "rating": "FIT"})
     client.post(f"/api/session/{sid}/turn/next")
 
     # Now the seed is frozen; the editor must refuse.
@@ -600,9 +580,7 @@ def test_drop_path_blocked_by_rule_b_sole_source(client: TestClient) -> None:
     ).json()["session_id"]
     client.post(f"/api/session/{sid}/audit")
     for rank in (1, 2, 3):
-        client.post(
-            f"/api/session/{sid}/rate", json={"rank": rank, "rating": "FIT"}
-        )
+        client.post(f"/api/session/{sid}/rate", json={"rank": rank, "rating": "FIT"})
     client.post(
         f"/api/session/{sid}/rate",
         json={"path": "sparse", "rank_in_path": 1, "rating": "NOT_FIT"},
@@ -644,9 +622,7 @@ def test_config_edit_rejects_empty_active_paths(client: TestClient) -> None:
         "/api/session", json={"query": "q", "scope": _TEST_SCOPE_NAME}
     ).json()["session_id"]
 
-    r = client.post(
-        f"/api/session/{sid}/config", json={"active_paths": []}
-    )
+    r = client.post(f"/api/session/{sid}/config", json={"active_paths": []})
     assert r.status_code == 400
 
 
@@ -658,9 +634,7 @@ def test_snapshot_after_turn_advance_has_trend_and_breakdown(
     ).json()["session_id"]
 
     for rank in (1, 2, 3):
-        client.post(
-            f"/api/session/{sid}/rate", json={"rank": rank, "rating": "FIT"}
-        )
+        client.post(f"/api/session/{sid}/rate", json={"rank": rank, "rating": "FIT"})
     client.post(
         f"/api/session/{sid}/rate",
         json={"path": "sparse", "rank_in_path": 1, "rating": "NOT_FIT"},
@@ -771,9 +745,7 @@ def _make_client_with_fetcher(
             _TEST_SCOPE_COLLECTION: fetcher,
         }
     test_client = TestClient(app)
-    res = test_client.post(
-        "/api/auth/login", json={"token": _TEST_USER_TOKEN}
-    )
+    res = test_client.post("/api/auth/login", json={"token": _TEST_USER_TOKEN})
     assert res.status_code == 200, (
         f"test fixture login failed: {res.status_code} {res.text}"
     )
@@ -966,9 +938,7 @@ def _make_recommendation_client(
         session_secret="test-secret-not-for-prod",
     )
     test_client = TestClient(app)
-    res = test_client.post(
-        "/api/auth/login", json={"token": _TEST_USER_TOKEN}
-    )
+    res = test_client.post("/api/auth/login", json={"token": _TEST_USER_TOKEN})
     assert res.status_code == 200, (
         f"test fixture login failed: {res.status_code} {res.text}"
     )
@@ -981,9 +951,7 @@ def _advance_one_turn(client: TestClient) -> str:
         "/api/session", json={"query": "q", "scope": _TEST_SCOPE_NAME}
     ).json()["session_id"]
     for rank in (1, 2, 3):
-        client.post(
-            f"/api/session/{sid}/rate", json={"rank": rank, "rating": "FIT"}
-        )
+        client.post(f"/api/session/{sid}/rate", json={"rank": rank, "rating": "FIT"})
     client.post(
         f"/api/session/{sid}/rate",
         json={"path": "sparse", "rank_in_path": 1, "rating": "NOT_FIT"},
@@ -1011,9 +979,7 @@ def test_recommendation_apply_drops_path(
     assert snap["audit_mode_active"] is False
     assert sorted(snap["params"]["active_paths"]) == ["dense", "sparse"]
 
-    r = client.post(
-        f"/api/session/{sid}/recommendation", json={"decision": "apply"}
-    )
+    r = client.post(f"/api/session/{sid}/recommendation", json={"decision": "apply"})
     assert r.status_code == 200, r.text
     body = r.json()
     # The path is dropped; audit mode stays off (recommendation flow
@@ -1029,8 +995,7 @@ def test_recommendation_apply_drops_path(
 
     # log_event was called with the expected shape.
     assert any(
-        e["kind"] == "path_drop_recommendation_decision"
-        and e["decision"] == "apply"
+        e["kind"] == "path_drop_recommendation_decision" and e["decision"] == "apply"
         for e in logger.events
     )
 
@@ -1044,32 +1009,24 @@ def test_recommendation_ignore_leaves_state_unchanged(
     )
     sid = _advance_one_turn(client)
 
-    r = client.post(
-        f"/api/session/{sid}/recommendation", json={"decision": "ignore"}
-    )
+    r = client.post(f"/api/session/{sid}/recommendation", json={"decision": "ignore"})
     assert r.status_code == 200
     body = r.json()
     assert body["audit_mode_active"] is False
     # Active_paths unchanged on ignore.
     assert sorted(body["params"]["active_paths"]) == ["dense", "sparse"]
 
-    assert any(
-        e["decision"] == "ignore" for e in logger.events
-    )
+    assert any(e["decision"] == "ignore" for e in logger.events)
 
 
 def test_recommendation_404_when_no_pending(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     """Reflection hook returns no path_drop_recommendation → endpoint 404."""
-    client, _ = _make_recommendation_client(
-        monkeypatch, tmp_path, recommendation=None
-    )
+    client, _ = _make_recommendation_client(monkeypatch, tmp_path, recommendation=None)
     sid = _advance_one_turn(client)
 
-    r = client.post(
-        f"/api/session/{sid}/recommendation", json={"decision": "apply"}
-    )
+    r = client.post(f"/api/session/{sid}/recommendation", json={"decision": "apply"})
     assert r.status_code == 404
 
 
@@ -1078,19 +1035,13 @@ def test_recommendation_double_call_returns_404(
 ) -> None:
     """Single-shot: a second decision on the same recommendation 404s."""
     rec = {"path": "sparse", "reason": "r", "confidence": "medium"}
-    client, _ = _make_recommendation_client(
-        monkeypatch, tmp_path, recommendation=rec
-    )
+    client, _ = _make_recommendation_client(monkeypatch, tmp_path, recommendation=rec)
     sid = _advance_one_turn(client)
 
-    r1 = client.post(
-        f"/api/session/{sid}/recommendation", json={"decision": "ignore"}
-    )
+    r1 = client.post(f"/api/session/{sid}/recommendation", json={"decision": "ignore"})
     assert r1.status_code == 200
 
-    r2 = client.post(
-        f"/api/session/{sid}/recommendation", json={"decision": "apply"}
-    )
+    r2 = client.post(f"/api/session/{sid}/recommendation", json={"decision": "apply"})
     assert r2.status_code == 404
 
 
@@ -1100,17 +1051,13 @@ def test_recommendation_decision_dto_elides_consumed_recommendation(
     """After the operator decides, /reflection no longer surfaces the
     recommendation — keeps a refresh from re-rendering the banner."""
     rec = {"path": "sparse", "reason": "r", "confidence": "medium"}
-    client, _ = _make_recommendation_client(
-        monkeypatch, tmp_path, recommendation=rec
-    )
+    client, _ = _make_recommendation_client(monkeypatch, tmp_path, recommendation=rec)
     sid = _advance_one_turn(client)
 
     pre = client.get(f"/api/session/{sid}/reflection").json()
     assert pre["path_drop_recommendation"] is not None
 
-    client.post(
-        f"/api/session/{sid}/recommendation", json={"decision": "ignore"}
-    )
+    client.post(f"/api/session/{sid}/recommendation", json={"decision": "ignore"})
 
     post = client.get(f"/api/session/{sid}/reflection").json()
     assert post["path_drop_recommendation"] is None
@@ -1140,9 +1087,7 @@ def test_recommendation_apply_409_when_path_inactive(
         ctx.state.current_config, active_paths=frozenset({"sparse"})
     )
 
-    r = client.post(
-        f"/api/session/{sid}/recommendation", json={"decision": "apply"}
-    )
+    r = client.post(f"/api/session/{sid}/recommendation", json={"decision": "apply"})
     assert r.status_code == 409
     rejections = [
         e
@@ -1154,9 +1099,7 @@ def test_recommendation_apply_409_when_path_inactive(
     assert len(rejections) == 1
     # The recommendation stays pending so the operator can re-decide.
     assert ctx.state.turns[-1].reflection is not None
-    assert (
-        ctx.state.turns[-1].reflection.get("_recommendation_consumed") is not True
-    )
+    assert ctx.state.turns[-1].reflection.get("_recommendation_consumed") is not True
 
 
 def test_recommendation_apply_409_when_last_active_path(
@@ -1181,9 +1124,7 @@ def test_recommendation_apply_409_when_last_active_path(
         ctx.state.current_config, active_paths=frozenset({"sparse"})
     )
 
-    r = client.post(
-        f"/api/session/{sid}/recommendation", json={"decision": "apply"}
-    )
+    r = client.post(f"/api/session/{sid}/recommendation", json={"decision": "apply"})
     assert r.status_code == 409
     assert "last" in r.json()["detail"].lower()
     rejections = [
@@ -1194,9 +1135,7 @@ def test_recommendation_apply_409_when_last_active_path(
         and e.get("note") == "last_path"
     ]
     assert len(rejections) == 1
-    assert (
-        ctx.state.turns[-1].reflection.get("_recommendation_consumed") is not True
-    )
+    assert ctx.state.turns[-1].reflection.get("_recommendation_consumed") is not True
 
 
 # ---------------------------------------------------------------------------
@@ -1211,9 +1150,7 @@ def _force_convergence(client: TestClient, sid: str) -> None:
     """
     from src.session.state import ConvergenceThresholds
 
-    permissive = ConvergenceThresholds(
-        min_fit=1, min_not_fit=0, precision_at_k=0.0
-    )
+    permissive = ConvergenceThresholds(min_fit=1, min_not_fit=0, precision_at_k=0.0)
     store = client.session_store  # type: ignore[attr-defined]
     # _sessions is keyed by session id; the harvest tests own a single
     # logged-in user, so direct lookup is fine.
@@ -1317,9 +1254,7 @@ def _wait_for_phase(
 
 def test_harvest_preflight_requires_convergence(client: TestClient) -> None:
     """Hitting ``/harvest/start`` before the dual gate fires returns 409."""
-    r = client.post(
-        "/api/session", json={"query": "q", "scope": _TEST_SCOPE_NAME}
-    )
+    r = client.post("/api/session", json={"query": "q", "scope": _TEST_SCOPE_NAME})
     sid = r.json()["session_id"]
     r = client.post(f"/api/session/{sid}/harvest/start")
     assert r.status_code == 409
@@ -1346,9 +1281,7 @@ def test_harvest_preflight_returns_payload(
 
     monkeypatch.setattr(anchor_cfg_module, "load_harvest_config", lambda **_: fake_cfg)
 
-    r = client.post(
-        "/api/session", json={"query": "q", "scope": _TEST_SCOPE_NAME}
-    )
+    r = client.post("/api/session", json={"query": "q", "scope": _TEST_SCOPE_NAME})
     sid = r.json()["session_id"]
     _force_convergence(client, sid)
 
@@ -1378,9 +1311,7 @@ def test_harvest_run_completes_and_result_returns_dto(
 
     monkeypatch.setattr(runner_module, "run_anchor", fake_run_anchor)
 
-    r = client.post(
-        "/api/session", json={"query": "q", "scope": _TEST_SCOPE_NAME}
-    )
+    r = client.post("/api/session", json={"query": "q", "scope": _TEST_SCOPE_NAME})
     sid = r.json()["session_id"]
     _force_convergence(client, sid)
 
@@ -1420,9 +1351,7 @@ def test_harvest_run_validation_error_returns_422(
 
     monkeypatch.setattr(runner_module, "run_anchor", fake_run_anchor)
 
-    r = client.post(
-        "/api/session", json={"query": "q", "scope": _TEST_SCOPE_NAME}
-    )
+    r = client.post("/api/session", json={"query": "q", "scope": _TEST_SCOPE_NAME})
     sid = r.json()["session_id"]
     _force_convergence(client, sid)
 
@@ -1454,9 +1383,7 @@ def test_harvest_run_concurrent_rejected(
 
     monkeypatch.setattr(runner_module, "run_anchor", fake_run_anchor)
 
-    r = client.post(
-        "/api/session", json={"query": "q", "scope": _TEST_SCOPE_NAME}
-    )
+    r = client.post("/api/session", json={"query": "q", "scope": _TEST_SCOPE_NAME})
     sid = r.json()["session_id"]
     _force_convergence(client, sid)
 
@@ -1504,9 +1431,7 @@ def _build_fake_rubric_metadata(version: int = 1) -> Any:
                 required=True,
             )
         ],
-        fit_examples=[
-            RubricFitExample(pk="fp1", span_text="positive example text")
-        ],
+        fit_examples=[RubricFitExample(pk="fp1", span_text="positive example text")],
         not_fit_examples=[
             RubricNotFitExample(
                 pk="np1",
@@ -1601,9 +1526,7 @@ def _build_fake_judge_result() -> Any:
     )
 
 
-def _drive_to_anchor_done(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> str:
+def _drive_to_anchor_done(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> str:
     """Get a session into ANCHOR_DONE so refine endpoints unlock."""
     fake = _build_fake_anchor_result()
 
@@ -1614,9 +1537,7 @@ def _drive_to_anchor_done(
 
     monkeypatch.setattr(runner_module, "run_anchor", fake_run_anchor)
 
-    r = client.post(
-        "/api/session", json={"query": "q", "scope": _TEST_SCOPE_NAME}
-    )
+    r = client.post("/api/session", json={"query": "q", "scope": _TEST_SCOPE_NAME})
     sid = r.json()["session_id"]
     _force_convergence(client, sid)
     r = client.post(f"/api/session/{sid}/harvest/run", json={"confirm": True})
@@ -1626,9 +1547,7 @@ def _drive_to_anchor_done(
 
 
 def test_refine_preflight_requires_anchor_done(client: TestClient) -> None:
-    r = client.post(
-        "/api/session", json={"query": "q", "scope": _TEST_SCOPE_NAME}
-    )
+    r = client.post("/api/session", json={"query": "q", "scope": _TEST_SCOPE_NAME})
     sid = r.json()["session_id"]
     r = client.post(f"/api/session/{sid}/refine/start")
     assert r.status_code == 409
@@ -1758,9 +1677,7 @@ def test_refine_save_rubric_bumps_version(
         derive_module, "parse_rubric_prompt", lambda text, **kw: new_meta
     )
 
-    r = client.post(
-        f"/api/session/{sid}/refine/rubric", json={"rubric_text": "edited"}
-    )
+    r = client.post(f"/api/session/{sid}/refine/rubric", json={"rubric_text": "edited"})
     assert r.status_code == 200, r.text
     assert r.json()["version"] == 2
 
@@ -2065,9 +1982,7 @@ def _make_client_with_registry(
         session_secret="test-secret-not-for-prod",
     )
     test_client = TestClient(app)
-    res = test_client.post(
-        "/api/auth/login", json={"token": _TEST_USER_TOKEN}
-    )
+    res = test_client.post("/api/auth/login", json={"token": _TEST_USER_TOKEN})
     assert res.status_code == 200, (
         f"test fixture login failed: {res.status_code} {res.text}"
     )
@@ -2103,9 +2018,7 @@ def test_expand_uses_scope_routed_postgres_table(
         content_column: str
         connect_timeout: int
 
-    monkeypatch.setattr(
-        "src.postgres.fetch.OriginalContentFetcher", _CapturingFetcher
-    )
+    monkeypatch.setattr("src.postgres.fetch.OriginalContentFetcher", _CapturingFetcher)
     monkeypatch.setattr(
         "src.postgres.config.load_postgres_config",
         lambda: _StubPGConfig(
@@ -2234,9 +2147,7 @@ def test_judge_worker_constructs_fetcher_with_scope_routed_table(
         def close(self) -> None:
             pass
 
-    monkeypatch.setattr(
-        "src.postgres.fetch.OriginalContentFetcher", _CapturingFetcher
-    )
+    monkeypatch.setattr("src.postgres.fetch.OriginalContentFetcher", _CapturingFetcher)
     monkeypatch.setattr(
         "src.refine.runner.run_refine_judge",
         lambda state, **kwargs: state,
@@ -2262,9 +2173,7 @@ def test_judge_worker_constructs_fetcher_with_scope_routed_table(
         user_id="alice",
     )
 
-    _run_refine_judge_worker(
-        ctx, runs_dir=None, pg_table_override=_OVERRIDE_TABLE
-    )
+    _run_refine_judge_worker(ctx, runs_dir=None, pg_table_override=_OVERRIDE_TABLE)
 
     assert captured_cfgs, "judge worker must construct a fetcher"
     assert captured_cfgs[-1].table == _OVERRIDE_TABLE
@@ -2312,9 +2221,7 @@ def test_judge_worker_fails_when_no_override(
         def close(self) -> None:
             pass
 
-    monkeypatch.setattr(
-        "src.postgres.fetch.OriginalContentFetcher", _CapturingFetcher
-    )
+    monkeypatch.setattr("src.postgres.fetch.OriginalContentFetcher", _CapturingFetcher)
 
     set_phase_calls: list[str] = []
     error_messages: list[str] = []
@@ -2349,7 +2256,9 @@ def test_spa_serves_index_html_for_root(tmp_path, monkeypatch):
 
     dist = tmp_path / "dist"
     dist.mkdir()
-    (dist / "index.html").write_text("<!doctype html><title>x</title>", encoding="utf-8")
+    (dist / "index.html").write_text(
+        "<!doctype html><title>x</title>", encoding="utf-8"
+    )
     (dist / "assets").mkdir()
     (dist / "assets" / "app.js").write_text("/*js*/", encoding="utf-8")
 

@@ -245,18 +245,14 @@ def _require_nonneg_float(raw: dict, key: str) -> float:
             f"config section '{_SECTION}': '{key}' must be a number"
         )
     if value < 0:
-        raise RefineConfigError(
-            f"config section '{_SECTION}': '{key}' must be >= 0"
-        )
+        raise RefineConfigError(f"config section '{_SECTION}': '{key}' must be >= 0")
     return float(value)
 
 
 def _require_positive_float(raw: dict, key: str) -> float:
     value = _require_nonneg_float(raw, key)
     if value <= 0:
-        raise RefineConfigError(
-            f"config section '{_SECTION}': '{key}' must be > 0"
-        )
+        raise RefineConfigError(f"config section '{_SECTION}': '{key}' must be > 0")
     return value
 
 

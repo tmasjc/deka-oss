@@ -26,8 +26,15 @@ class _StubFetcher:
         return {pk: self._mapping[pk] for pk in pks if pk in self._mapping}
 
 
-def _seed(tmp_path: Path, sid: str, *, labels: list[dict], phase4_meta: dict,
-          phase2_meta: dict | None = None, canonical_first_row: dict | None = None) -> None:
+def _seed(
+    tmp_path: Path,
+    sid: str,
+    *,
+    labels: list[dict],
+    phase4_meta: dict,
+    phase2_meta: dict | None = None,
+    canonical_first_row: dict | None = None,
+) -> None:
     (tmp_path / f"{sid}.phase4.labels.jsonl").write_text(
         "\n".join(json.dumps(row) for row in labels) + "\n",
         encoding="utf-8",

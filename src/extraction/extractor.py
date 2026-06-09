@@ -114,8 +114,7 @@ def _load_config(path: Path | None = None) -> ExtractionConfig:
         for key in _SECONDARY_KEYS:
             if not isinstance(raw[key], str) or not raw[key].strip():
                 raise ExtractionError(
-                    f"config section '{_SECTION}': "
-                    f"'{key}' must be a non-empty string"
+                    f"config section '{_SECTION}': '{key}' must be a non-empty string"
                 )
 
     return ExtractionConfig(
@@ -249,9 +248,7 @@ class SpanExtractor:
                 # (issue #51) would otherwise reach ``derive_span_text``
                 # in the caller and raise an uncaught ``IndexError``.
                 n_lines = len(chunk_content.split("\n"))
-                out_of_range = [
-                    i for i in result.span_line_indices if i >= n_lines
-                ]
+                out_of_range = [i for i in result.span_line_indices if i >= n_lines]
                 if out_of_range:
                     raise ExtractionError(
                         f"LLM returned out-of-range span_line_indices "

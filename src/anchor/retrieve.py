@@ -199,9 +199,7 @@ def _iterate_fit(
             except Exception as exc:  # noqa: BLE001
                 log.debug("search_iterator.close() raised: %s", exc)
 
-    budget_exhausted = (
-        total_hits >= max_k and not stop_on_T_prime and last_d <= T_prime
-    )
+    budget_exhausted = total_hits >= max_k and not stop_on_T_prime and last_d <= T_prime
     pages = PerFitPages(
         fit_pk=fit.pk,
         fit_chunk_id=fit.chunk_id,
@@ -256,15 +254,12 @@ def retrieve_anchored(
         raise ValueError("retrieve_anchored requires at least one FIT")
     if len(T_primes) != len(fits):
         raise ValueError(
-            f"T_primes length ({len(T_primes)}) must match fits "
-            f"length ({len(fits)})"
+            f"T_primes length ({len(T_primes)}) must match fits length ({len(fits)})"
         )
     if batch_size < 1:
         raise ValueError(f"batch_size must be ≥ 1 (got {batch_size})")
     if max_k < batch_size:
-        raise ValueError(
-            f"max_k ({max_k}) must be ≥ batch_size ({batch_size})"
-        )
+        raise ValueError(f"max_k ({max_k}) must be ≥ batch_size ({batch_size})")
 
     n = len(fits)
     fit_pks = {f.pk for f in fits}

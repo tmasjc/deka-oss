@@ -44,9 +44,7 @@ class WriteResult:
 
 def _now_iso() -> str:
     return (
-        datetime.now(timezone.utc)
-        .isoformat(timespec="seconds")
-        .replace("+00:00", "Z")
+        datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
     )
 
 
@@ -110,9 +108,7 @@ def _build_meta(
     frequency_gate: "FrequencyGateSummary | None" = None,
 ) -> dict[str, Any]:
     intruder_pks = [
-        _json_safe_pk(c.pk)
-        for c in retrieval.candidates
-        if c.pk in inputs.not_fit_pks
+        _json_safe_pk(c.pk) for c in retrieval.candidates if c.pk in inputs.not_fit_pks
     ]
     cohort_consistency_block = [
         {
@@ -135,8 +131,7 @@ def _build_meta(
             "T_prime_out": round(calibration.T_prime_out, 6),
             "radius_scheme": radius_scheme.value,
             "delta_summary": {
-                k: round(v, 6)
-                for k, v in distance_summary(calibration.deltas).items()
+                k: round(v, 6) for k, v in distance_summary(calibration.deltas).items()
             },
             "T_prime_summary": {
                 k: round(v, 6)
@@ -272,9 +267,7 @@ def _build_per_fit(
                 "T_prime": round(T_prime, 6),
                 "loo": {
                     "recovered": bool(loo.recovered) if loo else False,
-                    "recalibrated_T": (
-                        round(loo.recalibrated_T, 6) if loo else None
-                    ),
+                    "recalibrated_T": (round(loo.recalibrated_T, 6) if loo else None),
                     "rank_of_own_pk": loo.rank_of_own_pk if loo else None,
                     "distance_of_own_pk": (
                         round(loo.distance_of_own_pk, 6)
@@ -330,9 +323,7 @@ def write_anchor_outputs(
             f.pk: calibration.T_prime_out for f in inputs.fits
         }
     else:
-        t_prime_by_fit_pk = {
-            f.pk: t for f, t in zip(inputs.fits, calibration.T_primes)
-        }
+        t_prime_by_fit_pk = {f.pk: t for f, t in zip(inputs.fits, calibration.T_primes)}
 
     # Truncate-write the JSONL so re-runs don't accumulate stale lines.
     with jsonl_path.open("w", encoding="utf-8") as fp:
@@ -384,8 +375,7 @@ def write_anchor_outputs(
 
     t_prime_summary = distance_summary(calibration.T_primes)
     log.info(
-        "phase2: wrote %d candidates → %s (verdict=%s, T' med=%.4f "
-        "[%.4f–%.4f])",
+        "phase2: wrote %d candidates → %s (verdict=%s, T' med=%.4f [%.4f–%.4f])",
         len(retrieval.candidates),
         jsonl_path,
         recovery.verdict,

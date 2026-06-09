@@ -217,9 +217,7 @@ def test_load_raises_when_no_fits(tmp_path: Path, monkeypatch):
         load_anchor_inputs("EMPTY", runs_dir=runs)
 
 
-def test_load_drops_fits_with_empty_span_text(
-    session_dir: Path, monkeypatch, caplog
-):
+def test_load_drops_fits_with_empty_span_text(session_dir: Path, monkeypatch, caplog):
     """Missing-span rows are dropped with a warning, not an abort."""
     log = session_dir / "SESS-TEST.jsonl"
     lines = log.read_text(encoding="utf-8").splitlines()
@@ -243,9 +241,7 @@ def test_load_drops_fits_with_empty_span_text(
             }
         ),
     )
-    monkeypatch.setattr(
-        loader, "_read_embed_model_id", _fake_model_id_reader("bge-m3")
-    )
+    monkeypatch.setattr(loader, "_read_embed_model_id", _fake_model_id_reader("bge-m3"))
     client = _FakeMilvus(
         chunk_embeddings={
             "pk-B": [0.9, 0.1, 0.0, 0.0],
@@ -278,9 +274,7 @@ def test_load_raises_when_dropping_empty_spans_leaves_fewer_than_two(
     log.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     with pytest.raises(AnchorLoadError, match="at least 2"):
-        load_anchor_inputs(
-            "SESS-TEST", runs_dir=session_dir, allow_unconverged=True
-        )
+        load_anchor_inputs("SESS-TEST", runs_dir=session_dir, allow_unconverged=True)
 
 
 def test_load_raises_on_model_mismatch(session_dir: Path, monkeypatch):
@@ -299,9 +293,7 @@ def test_load_raises_on_model_mismatch(session_dir: Path, monkeypatch):
     details = session_dir / "SESS-TEST.details.jsonl"
     rows = [json.loads(ln) for ln in details.read_text(encoding="utf-8").splitlines()]
     rows[0]["search"]["embed_model_id"] = "bge-m3"
-    details.write_text(
-        "\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8"
-    )
+    details.write_text("\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8")
 
     with pytest.raises(AnchorLoadError, match="model.*drift|mismatch"):
         load_anchor_inputs(

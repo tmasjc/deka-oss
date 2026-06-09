@@ -19,9 +19,7 @@ def _registry_from_request(request: Request) -> UserRegistry:
 
     Mirrors ``app.state.scopes`` access elsewhere in the web API.
     """
-    registry: UserRegistry | None = getattr(
-        request.app.state, "user_registry", None
-    )
+    registry: UserRegistry | None = getattr(request.app.state, "user_registry", None)
     if registry is None:  # pragma: no cover — bootstrap misconfiguration
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

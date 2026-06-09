@@ -87,9 +87,7 @@ class RefineTimings:
 
 def _now_iso() -> str:
     return (
-        datetime.now(timezone.utc)
-        .isoformat(timespec="seconds")
-        .replace("+00:00", "Z")
+        datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
     )
 
 
@@ -245,21 +243,16 @@ def write_refine_stage_a(
     metadata = rubric_metadata.model_copy(
         update={"prompt_path": _prompt_basename(session_id)}
     )
-    rubric_path.write_text(
-        metadata_to_json(metadata) + "\n", encoding="utf-8"
-    )
+    rubric_path.write_text(metadata_to_json(metadata) + "\n", encoding="utf-8")
 
     with evidence_path.open("w", encoding="utf-8") as fp:
         for record in judge_result.verdicts:
-            fp.write(
-                json.dumps(_verdict_record_dict(record), ensure_ascii=False)
-            )
+            fp.write(json.dumps(_verdict_record_dict(record), ensure_ascii=False))
             fp.write("\n")
         fp.flush()
 
     log.info(
-        "Phase 3 stage A wrote rubric+evidence; %d verdict(s); "
-        "rubric_version=%d",
+        "Phase 3 stage A wrote rubric+evidence; %d verdict(s); rubric_version=%d",
         len(judge_result.verdicts),
         metadata.version,
     )
@@ -314,9 +307,7 @@ def write_refine_stage_b(
 
     # Sync metadata.prompt_path to the persisted sidecar's basename
     # for the meta payload's prompt_sha256 + prompt_path bookkeeping.
-    metadata = rubric_metadata.model_copy(
-        update={"prompt_path": prompt_path.name}
-    )
+    metadata = rubric_metadata.model_copy(update={"prompt_path": prompt_path.name})
 
     prompt_path.write_text(rubric_text, encoding="utf-8")
 
@@ -338,9 +329,7 @@ def write_refine_stage_b(
             "auto_drop_known_intruders": cfg.auto_drop_known_intruders,
             "sample_strategy": "stratified",
         },
-        "decile_boundaries": [
-            _round_or_null(b) for b in sample.decile_boundaries
-        ],
+        "decile_boundaries": [_round_or_null(b) for b in sample.decile_boundaries],
         "per_decile_count": list(sample.per_decile_count),
         "per_decile_keep_rate": _per_decile_keep_rate(
             judge_result.verdicts, cfg.n_bins
@@ -350,9 +339,7 @@ def write_refine_stage_b(
             key=lambda x: str(x),
         ),
         "verdict_counts": _verdict_counts(judge_result.verdicts),
-        "failed_check_histogram": _failed_check_histogram(
-            judge_result.verdicts
-        ),
+        "failed_check_histogram": _failed_check_histogram(judge_result.verdicts),
         "latency_summary": _latency_summary(judge_result.verdicts),
         "parse_error_count": judge_result.parse_error_count,
         "api_error_count": judge_result.api_error_count,
@@ -375,8 +362,7 @@ def write_refine_stage_b(
         fp.write(json.dumps(details_block, ensure_ascii=False) + "\n")
 
     log.info(
-        "Phase 3 stage B wrote prompt+meta+details; decision=%s; "
-        "rubric_version=%d",
+        "Phase 3 stage B wrote prompt+meta+details; decision=%s; rubric_version=%d",
         operator_decision,
         metadata.version,
     )

@@ -134,9 +134,7 @@ class DualSpanExtractor:
         union = sorted(
             set(result_a.span_line_indices) | set(result_b.span_line_indices)
         )
-        merged_reason = (
-            f"[primary] {result_a.reason} || [secondary] {result_b.reason}"
-        )
+        merged_reason = f"[primary] {result_a.reason} || [secondary] {result_b.reason}"
         # ``model_construct`` bypasses the Pydantic length-cap
         # validator (≤3) so a legitimate 4–6 line union isn't
         # rejected. Each vendor's individual output still went

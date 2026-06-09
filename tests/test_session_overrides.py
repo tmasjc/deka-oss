@@ -55,9 +55,7 @@ _SCOPE_COLLECTION = "test_collection"
 def _users() -> UserRegistry:
     sha = hashlib.sha256(_USER_TOKEN.encode("utf-8")).hexdigest()
     return UserRegistry(
-        users=(
-            User(id=_USER_ID, token_sha256=sha, allowed_scopes=None),
-        )
+        users=(User(id=_USER_ID, token_sha256=sha, allowed_scopes=None),)
     )
 
 
@@ -100,7 +98,12 @@ def _fake_table(query: str, config: SearchConfig) -> EvidenceTable:
             scores={"dense": 0.5, "sparse": 0.0},
         )
     ]
-    return EvidenceTable(query=query, config=config, rows=rows, per_path_candidates={"dense": [], "sparse": []})
+    return EvidenceTable(
+        query=query,
+        config=config,
+        rows=rows,
+        per_path_candidates={"dense": [], "sparse": []},
+    )
 
 
 @pytest.fixture
@@ -294,9 +297,7 @@ def test_apply_loader_applies_overrides(tmp_path: Path) -> None:
         }
     }
     path = _write_yaml(tmp_path, body)
-    cfg = load_apply_config(
-        path=path, session_overrides={"confidence_threshold": 0.85}
-    )
+    cfg = load_apply_config(path=path, session_overrides={"confidence_threshold": 0.85})
     assert cfg.confidence_threshold == 0.85
     assert cfg.min_precision == 0.75
 

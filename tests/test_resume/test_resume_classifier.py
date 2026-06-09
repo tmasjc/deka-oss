@@ -31,10 +31,7 @@ def _converged_row(turn: int = 3) -> str:
 
 
 def _turn_row(turn: int = 1) -> str:
-    return (
-        json.dumps({"turn": turn, "session_id": "abcd", "query": "q"})
-        + "\n"
-    )
+    return json.dumps({"turn": turn, "session_id": "abcd", "query": "q"}) + "\n"
 
 
 @pytest.fixture
@@ -51,9 +48,7 @@ def runs_dir(tmp_path: Path) -> Path:
 
 def test_classify_done_view_when_phase3_meta_says_agree(runs_dir: Path) -> None:
     sid = "abcd"
-    _write(
-        runs_dir / f"{sid}.phase3.meta.json", {"operator_decision": "agree"}
-    )
+    _write(runs_dir / f"{sid}.phase3.meta.json", {"operator_decision": "agree"})
     # Stage A files coexist after finalise — the priority chain still
     # picks DONE_VIEW because meta.json wins.
     _write(runs_dir / f"{sid}.phase3.rubric.json", {"version": 1})
@@ -87,9 +82,7 @@ def test_classify_post_tuning_when_canonical_last_line_is_converged(
     runs_dir: Path,
 ) -> None:
     sid = "abcd"
-    _write(
-        runs_dir / f"{sid}.jsonl", _turn_row(1) + _turn_row(2) + _converged_row(2)
-    )
+    _write(runs_dir / f"{sid}.jsonl", _turn_row(1) + _turn_row(2) + _converged_row(2))
     assert classify(sid, runs_dir) == ResumeTarget.POST_TUNING
 
 
@@ -134,9 +127,7 @@ def test_priority_done_view_beats_post_rubric(runs_dir: Path) -> None:
     sid = "abcd"
     _write(runs_dir / f"{sid}.phase3.rubric.json", {"version": 1})
     _write(runs_dir / f"{sid}.phase3.evidence.jsonl", "{}\n")
-    _write(
-        runs_dir / f"{sid}.phase3.meta.json", {"operator_decision": "agree"}
-    )
+    _write(runs_dir / f"{sid}.phase3.meta.json", {"operator_decision": "agree"})
     # Phase 4 labels present → DONE_VIEW wins over POST_RUBRIC and
     # APPLY_PENDING.
     _write(runs_dir / f"{sid}.phase4.labels.jsonl", "{}\n")
@@ -180,9 +171,7 @@ def test_corrupt_phase3_meta_falls_through_gracefully(runs_dir: Path) -> None:
     """A malformed phase3.meta.json must not raise; we fall back to the
     next branch (POST_RUBRIC if the stage A pair exists)."""
     sid = "abcd"
-    (runs_dir / f"{sid}.phase3.meta.json").write_text(
-        "{not json", encoding="utf-8"
-    )
+    (runs_dir / f"{sid}.phase3.meta.json").write_text("{not json", encoding="utf-8")
     _write(runs_dir / f"{sid}.phase3.rubric.json", {"version": 1})
     _write(runs_dir / f"{sid}.phase3.evidence.jsonl", "{}\n")
     assert classify(sid, runs_dir) == ResumeTarget.POST_RUBRIC

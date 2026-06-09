@@ -261,16 +261,16 @@ def test_config_rejects_min_survivors_above_top_k(tmp_path: Path) -> None:
         load_default_config(bad)
 
 
-def test_config_default_active_paths_all_active(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_config_default_active_paths_all_active(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.delenv("DEKA_EMBED_URL", raising=False)
     cfg = load_default_config(_EXAMPLE_CONFIG)
     assert cfg.active_paths == frozenset({"dense", "sparse"})
 
 
 def test_config_parses_active_paths_subset(tmp_path: Path) -> None:
-    good = _write_yaml(
-        tmp_path / "subset.yaml", replace={"active_paths": "[dense]"}
-    )
+    good = _write_yaml(tmp_path / "subset.yaml", replace={"active_paths": "[dense]"})
     cfg = load_default_config(good)
     assert cfg.active_paths == frozenset({"dense"})
 
@@ -976,7 +976,10 @@ def test_run_search_excludes_fused_pks_from_candidates(
     assert cands[0].rank_in_path == 3
     assert cands[0].path == "dense"
     assert cands[0].score == 0.65
-    assert cands[0].chunk_content == "老师：candidate\n家长：ok\n老师：那我们再聊聊孩子最近的学习情况、兴趣爱好以及未来的学业规划好吗？方便后续制定计划。"
+    assert (
+        cands[0].chunk_content
+        == "老师：candidate\n家长：ok\n老师：那我们再聊聊孩子最近的学习情况、兴趣爱好以及未来的学业规划好吗？方便后续制定计划。"
+    )
 
 
 def test_run_search_dense_short_hits_in_raw_fused_still_surface_as_candidates(
@@ -1007,20 +1010,56 @@ def test_run_search_dense_short_hits_in_raw_fused_still_surface_as_candidates(
             (4003, 0.85, {"sample_id": "Sc", "chunk_content": short_c, "chunk_id": 3}),
         ],
         "sparse_embedding": [
-            (4100, 0.40, {"sample_id": "Sd", "chunk_content": long_sparse, "chunk_id": 4}),
+            (
+                4100,
+                0.40,
+                {"sample_id": "Sd", "chunk_content": long_sparse, "chunk_id": 4},
+            ),
         ],
     }
     # Raw fused includes dense's short top-3 (RRF places them near the top
     # because their dense rank is high). Gate 1 will drop them.
     fused = [
-        (4001, {"sample_id": "Sa", "counselor_id": "T", "term": "T",
-                "chunk_content": short_a, "chunk_id": 1}),
-        (4002, {"sample_id": "Sb", "counselor_id": "T", "term": "T",
-                "chunk_content": short_b, "chunk_id": 2}),
-        (4003, {"sample_id": "Sc", "counselor_id": "T", "term": "T",
-                "chunk_content": short_c, "chunk_id": 3}),
-        (4100, {"sample_id": "Sd", "counselor_id": "T", "term": "T",
-                "chunk_content": long_sparse, "chunk_id": 4}),
+        (
+            4001,
+            {
+                "sample_id": "Sa",
+                "counselor_id": "T",
+                "term": "T",
+                "chunk_content": short_a,
+                "chunk_id": 1,
+            },
+        ),
+        (
+            4002,
+            {
+                "sample_id": "Sb",
+                "counselor_id": "T",
+                "term": "T",
+                "chunk_content": short_b,
+                "chunk_id": 2,
+            },
+        ),
+        (
+            4003,
+            {
+                "sample_id": "Sc",
+                "counselor_id": "T",
+                "term": "T",
+                "chunk_content": short_c,
+                "chunk_id": 3,
+            },
+        ),
+        (
+            4100,
+            {
+                "sample_id": "Sd",
+                "counselor_id": "T",
+                "term": "T",
+                "chunk_content": long_sparse,
+                "chunk_id": 4,
+            },
+        ),
     ]
     client = _FakeClient(per_path_results=per_path, fused=fused)
 
@@ -1062,7 +1101,11 @@ def test_run_search_short_chunk_gate_skips_per_path_candidates(
             (3003, 0.85, {"sample_id": "Sc", "chunk_content": short_c, "chunk_id": 3}),
         ],
         "sparse_embedding": [
-            (3100, 0.40, {"sample_id": "Sd", "chunk_content": long_fused, "chunk_id": 4}),
+            (
+                3100,
+                0.40,
+                {"sample_id": "Sd", "chunk_content": long_fused, "chunk_id": 4},
+            ),
         ],
     }
     fused = [
@@ -1139,18 +1182,66 @@ def test_run_search_short_chunk_count_excludes_top_k_truncation(
     }
     # Fused pool of 6: 4 long + 2 short. After Gate 1 → 4. After [:3] → 3.
     fused = [
-        (5000, {"sample_id": "Sa", "counselor_id": "T", "term": "Tm",
-                "chunk_content": long_a, "chunk_id": 1}),
-        (5001, {"sample_id": "Sb", "counselor_id": "T", "term": "Tm",
-                "chunk_content": long_b, "chunk_id": 2}),
-        (5004, {"sample_id": "Se", "counselor_id": "T", "term": "Tm",
-                "chunk_content": short_e, "chunk_id": 5}),
-        (5002, {"sample_id": "Sc", "counselor_id": "T", "term": "Tm",
-                "chunk_content": long_c, "chunk_id": 3}),
-        (5005, {"sample_id": "Sf", "counselor_id": "T", "term": "Tm",
-                "chunk_content": short_f, "chunk_id": 6}),
-        (5003, {"sample_id": "Sd", "counselor_id": "T", "term": "Tm",
-                "chunk_content": long_d, "chunk_id": 4}),
+        (
+            5000,
+            {
+                "sample_id": "Sa",
+                "counselor_id": "T",
+                "term": "Tm",
+                "chunk_content": long_a,
+                "chunk_id": 1,
+            },
+        ),
+        (
+            5001,
+            {
+                "sample_id": "Sb",
+                "counselor_id": "T",
+                "term": "Tm",
+                "chunk_content": long_b,
+                "chunk_id": 2,
+            },
+        ),
+        (
+            5004,
+            {
+                "sample_id": "Se",
+                "counselor_id": "T",
+                "term": "Tm",
+                "chunk_content": short_e,
+                "chunk_id": 5,
+            },
+        ),
+        (
+            5002,
+            {
+                "sample_id": "Sc",
+                "counselor_id": "T",
+                "term": "Tm",
+                "chunk_content": long_c,
+                "chunk_id": 3,
+            },
+        ),
+        (
+            5005,
+            {
+                "sample_id": "Sf",
+                "counselor_id": "T",
+                "term": "Tm",
+                "chunk_content": short_f,
+                "chunk_id": 6,
+            },
+        ),
+        (
+            5003,
+            {
+                "sample_id": "Sd",
+                "counselor_id": "T",
+                "term": "Tm",
+                "chunk_content": long_d,
+                "chunk_id": 4,
+            },
+        ),
     ]
     client = _FakeClient(per_path_results=per_path, fused=fused)
 

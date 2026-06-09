@@ -52,8 +52,15 @@ class _FakeMilvusFull:
         ]
 
     def search(
-        self, *, data, collection_name, anns_field, search_params,
-        limit, output_fields, filter=None,
+        self,
+        *,
+        data,
+        collection_name,
+        anns_field,
+        search_params,
+        limit,
+        output_fields,
+        filter=None,
     ):
         # LOO path: flatten the first page of what page_fn would serve
         # and clamp to `limit`. page_fn is reused so tests can drive
@@ -67,8 +74,15 @@ class _FakeMilvusFull:
         return out
 
     def search_iterator(
-        self, *, data, collection_name, anns_field, batch_size,
-        search_params, output_fields, filter=None,
+        self,
+        *,
+        data,
+        collection_name,
+        anns_field,
+        batch_size,
+        search_params,
+        output_fields,
+        filter=None,
     ):
         self.iterator_opens += 1
         pages = self._page_fn(data[0], collection_name, batch_size)
@@ -208,9 +222,7 @@ def test_run_anchor_writes_phase2_sidecars(session_dir: Path, monkeypatch):
     assert "recalibrated_T_prime" not in sample["loo"]
 
 
-def test_runner_uses_config_when_kwargs_are_none(
-    session_dir: Path, monkeypatch
-):
+def test_runner_uses_config_when_kwargs_are_none(session_dir: Path, monkeypatch):
     """batch_size / max_k = None → resolve from HarvestConfig."""
     from src.anchor import config as config_mod
     from src.anchor import loader as loader_mod
@@ -581,10 +593,14 @@ def test_quality_gate_drops_outlier_fit(session_dir: Path, monkeypatch):
     }
 
     def pages(q, coll, bs):
-        return [[
-            _hit("pk-A", 1.0), _hit("pk-B", 1.0),
-            _hit("pk-D", 1.0), _hit("pk-E", 1.0),
-        ]]
+        return [
+            [
+                _hit("pk-A", 1.0),
+                _hit("pk-B", 1.0),
+                _hit("pk-D", 1.0),
+                _hit("pk-E", 1.0),
+            ]
+        ]
 
     client = _FakeMilvusFull(chunk_embeddings=chunks, page_fn=pages)
     _patch_embed(monkeypatch, spans)
@@ -648,10 +664,14 @@ def test_quality_gate_multiplier_rule_fires(session_dir: Path, monkeypatch):
     }
 
     def pages(q, coll, bs):
-        return [[
-            _hit("pk-A", 1.0), _hit("pk-B", 1.0),
-            _hit("pk-D", 1.0), _hit("pk-E", 1.0),
-        ]]
+        return [
+            [
+                _hit("pk-A", 1.0),
+                _hit("pk-B", 1.0),
+                _hit("pk-D", 1.0),
+                _hit("pk-E", 1.0),
+            ]
+        ]
 
     client = _FakeMilvusFull(chunk_embeddings=chunks, page_fn=pages)
     _patch_embed(monkeypatch, spans)
@@ -695,9 +715,7 @@ def test_quality_gate_multiplier_rule_fires(session_dir: Path, monkeypatch):
     assert result.quality_gate_median_floor_applied is False
 
 
-def test_run_anchor_aborts_when_session_unconverged(
-    session_dir: Path, monkeypatch
-):
+def test_run_anchor_aborts_when_session_unconverged(session_dir: Path, monkeypatch):
     """Default precondition: a session below the dual gate (cumulative
     FIT < ``min_fit`` or latest P@K < ``precision_at_k``) raises
     ``AnchorValidationError`` before any heavy work runs. The synthetic
@@ -735,9 +753,7 @@ def test_run_anchor_aborts_when_session_unconverged(
     assert not (session_dir / "SESS-TEST.phase2.jsonl").exists()
 
 
-def test_run_anchor_allow_unconverged_bypasses_gate(
-    session_dir: Path, monkeypatch
-):
+def test_run_anchor_allow_unconverged_bypasses_gate(session_dir: Path, monkeypatch):
     """``allow_unconverged=True`` lets the same below-gate session run
     end-to-end — the escape hatch the CLI surfaces as
     ``--allow-unconverged``."""
@@ -772,9 +788,7 @@ def test_run_anchor_allow_unconverged_bypasses_gate(
     assert (session_dir / "SESS-TEST.phase2.jsonl").exists()
 
 
-def test_run_anchor_honours_session_precision_override(
-    session_dir: Path, monkeypatch
-):
+def test_run_anchor_honours_session_precision_override(session_dir: Path, monkeypatch):
     """Per-session ``harvest.precision_at_k`` overrides must reach the
     Phase 2 convergence gate. Phase 1's ``state.is_converged`` already
     reads the override (snapshotted at session creation), so a session
@@ -873,10 +887,14 @@ def test_quality_gate_floor_preserves_pure_whole_chunk_cohort(
     }
 
     def pages(q, coll, bs):
-        return [[
-            _hit("pk-A", 1.0), _hit("pk-B", 1.0),
-            _hit("pk-D", 1.0), _hit("pk-E", 1.0),
-        ]]
+        return [
+            [
+                _hit("pk-A", 1.0),
+                _hit("pk-B", 1.0),
+                _hit("pk-D", 1.0),
+                _hit("pk-E", 1.0),
+            ]
+        ]
 
     client = _FakeMilvusFull(chunk_embeddings=chunks, page_fn=pages)
     _patch_embed(monkeypatch, spans)
@@ -906,9 +924,7 @@ def test_quality_gate_floor_preserves_pure_whole_chunk_cohort(
     assert qg["median_floor"] == pytest.approx(0.005, abs=1e-9)
 
 
-def test_quality_gate_floor_drops_mixed_cohort_outlier(
-    session_dir: Path, monkeypatch
-):
+def test_quality_gate_floor_drops_mixed_cohort_outlier(session_dir: Path, monkeypatch):
     """Issue #47 regression: cohort with three whole-chunk FITs
     (δ ≈ 0) plus one legitimate sub-chunk span (δ ≈ 0.08). Under the
     OLD epsilon-disable logic the multiplier rule was off and the
@@ -938,10 +954,14 @@ def test_quality_gate_floor_drops_mixed_cohort_outlier(
     }
 
     def pages(q, coll, bs):
-        return [[
-            _hit("pk-A", 1.0), _hit("pk-B", 1.0),
-            _hit("pk-D", 1.0), _hit("pk-E", 1.0),
-        ]]
+        return [
+            [
+                _hit("pk-A", 1.0),
+                _hit("pk-B", 1.0),
+                _hit("pk-D", 1.0),
+                _hit("pk-E", 1.0),
+            ]
+        ]
 
     client = _FakeMilvusFull(chunk_embeddings=chunks, page_fn=pages)
     _patch_embed(monkeypatch, spans)
@@ -996,10 +1016,14 @@ def test_quality_gate_emits_bimodal_warning(session_dir: Path, monkeypatch):
     }
 
     def pages(q, coll, bs):
-        return [[
-            _hit("pk-A", 1.0), _hit("pk-B", 1.0),
-            _hit("pk-D", 1.0), _hit("pk-E", 1.0),
-        ]]
+        return [
+            [
+                _hit("pk-A", 1.0),
+                _hit("pk-B", 1.0),
+                _hit("pk-D", 1.0),
+                _hit("pk-E", 1.0),
+            ]
+        ]
 
     client = _FakeMilvusFull(chunk_embeddings=chunks, page_fn=pages)
     _patch_embed(monkeypatch, spans)
@@ -1016,9 +1040,7 @@ def test_quality_gate_emits_bimodal_warning(session_dir: Path, monkeypatch):
     )
 
     bimodal_msgs = [m for m in progress_log if "bimodal" in m.lower()]
-    assert bimodal_msgs, (
-        f"expected a bimodality warning, got: {progress_log[:10]!r}"
-    )
+    assert bimodal_msgs, f"expected a bimodality warning, got: {progress_log[:10]!r}"
     assert "WARNING" in bimodal_msgs[0]
     assert "Floor backstop active" in bimodal_msgs[0]
 
@@ -1047,10 +1069,14 @@ def test_quality_gate_no_bimodal_warning_on_uniform_cohort(
     }
 
     def pages(q, coll, bs):
-        return [[
-            _hit("pk-A", 1.0), _hit("pk-B", 1.0),
-            _hit("pk-D", 1.0), _hit("pk-E", 1.0),
-        ]]
+        return [
+            [
+                _hit("pk-A", 1.0),
+                _hit("pk-B", 1.0),
+                _hit("pk-D", 1.0),
+                _hit("pk-E", 1.0),
+            ]
+        ]
 
     client = _FakeMilvusFull(chunk_embeddings=chunks, page_fn=pages)
     _patch_embed(monkeypatch, spans)
@@ -1211,15 +1237,18 @@ def _spread_pages_factory():
     we use ``search_iterator``'s ``data`` vector to identify which FIT
     is asking.
     """
+
     # Each iterator returns FIT pks (excluded from output) + one
     # neighbour unique to that FIT so the attribution is unambiguous.
     def pages(q, coll, bs):
-        return [[
-            _hit("pk-A", 1.0),
-            _hit("pk-B", 1.0),
-            _hit("pk-D", 1.0),
-            _hit(f"nbr-{round(q[0], 3)}-{round(q[1], 3)}", 0.99),
-        ]]
+        return [
+            [
+                _hit("pk-A", 1.0),
+                _hit("pk-B", 1.0),
+                _hit("pk-D", 1.0),
+                _hit(f"nbr-{round(q[0], 3)}-{round(q[1], 3)}", 0.99),
+            ]
+        ]
 
     return pages
 
@@ -1232,9 +1261,7 @@ def test_radius_scheme_decoupled_uses_session_wide_T_prime_out(
     attracted it."""
     spans, chunks = _spread_cohort()
 
-    client = _FakeMilvusFull(
-        chunk_embeddings=chunks, page_fn=_spread_pages_factory()
-    )
+    client = _FakeMilvusFull(chunk_embeddings=chunks, page_fn=_spread_pages_factory())
     _patch_embed(monkeypatch, spans)
     _fake_harvest_cfg(monkeypatch)
 
@@ -1268,17 +1295,13 @@ def test_radius_scheme_decoupled_uses_session_wide_T_prime_out(
     assert threshold_values == {round(T_prime_out, 6)}
 
 
-def test_radius_scheme_per_fit_uses_per_fit_T_primes(
-    session_dir: Path, monkeypatch
-):
+def test_radius_scheme_per_fit_uses_per_fit_T_primes(session_dir: Path, monkeypatch):
     """Under ``per_fit`` the output's ``threshold_T_prime`` varies by
     the attracting FIT, so multiple distinct values appear when δ_i
     varies across the cohort."""
     spans, chunks = _spread_cohort()
 
-    client = _FakeMilvusFull(
-        chunk_embeddings=chunks, page_fn=_spread_pages_factory()
-    )
+    client = _FakeMilvusFull(chunk_embeddings=chunks, page_fn=_spread_pages_factory())
     _patch_embed(monkeypatch, spans)
     _fake_harvest_cfg(monkeypatch)
 
@@ -1347,8 +1370,10 @@ def test_frequency_gate_drops_chunks_below_f(session_dir: Path, monkeypatch):
         # Encode which FIT is asking via the span vector.
         is_fit_a = q[0] >= 0.99
         page = [
-            _hit("pk-A", 1.0), _hit("pk-B", 1.0),
-            _hit("pk-D", 1.0), _hit("pk-E", 1.0),
+            _hit("pk-A", 1.0),
+            _hit("pk-B", 1.0),
+            _hit("pk-D", 1.0),
+            _hit("pk-E", 1.0),
             _hit("shared", 1.0),
         ]
         if is_fit_a:
@@ -1389,9 +1414,7 @@ def test_frequency_gate_drops_chunks_below_f(session_dir: Path, monkeypatch):
         assert rec["qualifying_fit_pks"] == sorted(rec["qualifying_fit_pks"])
 
 
-def test_frequency_gate_keeps_chunks_meeting_f_exactly(
-    session_dir: Path, monkeypatch
-):
+def test_frequency_gate_keeps_chunks_meeting_f_exactly(session_dir: Path, monkeypatch):
     """Chunk admitted by exactly f distinct anchors is retained."""
     _frequency_gate_session(session_dir)
     spans, chunks = _frequency_gate_spans_chunks()
@@ -1399,8 +1422,10 @@ def test_frequency_gate_keeps_chunks_meeting_f_exactly(
     # Two FITs (A, B) admit "exact-two"; D and E miss it. f=2 keeps it.
     def pages(q, coll, bs):
         page = [
-            _hit("pk-A", 1.0), _hit("pk-B", 1.0),
-            _hit("pk-D", 1.0), _hit("pk-E", 1.0),
+            _hit("pk-A", 1.0),
+            _hit("pk-B", 1.0),
+            _hit("pk-D", 1.0),
+            _hit("pk-E", 1.0),
         ]
         # Identify the FIT by the leading component of its span vector.
         if q[0] >= 0.99 or (0.94 <= q[0] <= 0.96):
@@ -1436,8 +1461,10 @@ def test_frequency_gate_disabled_at_one_keeps_single_anchor_chunks(
 
     def pages(q, coll, bs):
         page = [
-            _hit("pk-A", 1.0), _hit("pk-B", 1.0),
-            _hit("pk-D", 1.0), _hit("pk-E", 1.0),
+            _hit("pk-A", 1.0),
+            _hit("pk-B", 1.0),
+            _hit("pk-D", 1.0),
+            _hit("pk-E", 1.0),
         ]
         if q[0] >= 0.99:
             page.append(_hit("solo-fit-a", 1.0))
@@ -1481,9 +1508,13 @@ def test_frequency_gate_aborts_when_f_exceeds_quality_gate_survivors(
     }
 
     def pages(q, coll, bs):
-        return [[
-            _hit("pk-A", 1.0), _hit("pk-B", 1.0), _hit("pk-D", 1.0),
-        ]]
+        return [
+            [
+                _hit("pk-A", 1.0),
+                _hit("pk-B", 1.0),
+                _hit("pk-D", 1.0),
+            ]
+        ]
 
     client = _FakeMilvusFull(chunk_embeddings=chunks, page_fn=pages)
     _patch_embed(monkeypatch, spans)
@@ -1512,11 +1543,15 @@ def test_frequency_gate_meta_block_shape(session_dir: Path, monkeypatch):
     spans, chunks = _frequency_gate_spans_chunks()
 
     def pages(q, coll, bs):
-        return [[
-            _hit("pk-A", 1.0), _hit("pk-B", 1.0),
-            _hit("pk-D", 1.0), _hit("pk-E", 1.0),
-            _hit("nbr-1", 1.0),
-        ]]
+        return [
+            [
+                _hit("pk-A", 1.0),
+                _hit("pk-B", 1.0),
+                _hit("pk-D", 1.0),
+                _hit("pk-E", 1.0),
+                _hit("nbr-1", 1.0),
+            ]
+        ]
 
     client = _FakeMilvusFull(chunk_embeddings=chunks, page_fn=pages)
     _patch_embed(monkeypatch, spans)
@@ -1548,7 +1583,9 @@ def test_frequency_gate_meta_block_shape(session_dir: Path, monkeypatch):
     # All chunks admitted by all 4 FITs (constant page_fn).
     assert fg["dropped"] == 0
     assert set(fg["qualifying_count_distribution"].keys()) == {
-        "min", "median", "max",
+        "min",
+        "median",
+        "max",
     }
     assert fg["qualifying_count_distribution"]["min"] >= 2
     # Histogram counts must sum to kept and be JSON-keyed (str → int).
@@ -1566,10 +1603,14 @@ def test_frequency_gate_does_not_affect_loo(session_dir: Path, monkeypatch):
     spans, chunks = _frequency_gate_spans_chunks()
 
     def pages(q, coll, bs):
-        return [[
-            _hit("pk-A", 1.0), _hit("pk-B", 1.0),
-            _hit("pk-D", 1.0), _hit("pk-E", 1.0),
-        ]]
+        return [
+            [
+                _hit("pk-A", 1.0),
+                _hit("pk-B", 1.0),
+                _hit("pk-D", 1.0),
+                _hit("pk-E", 1.0),
+            ]
+        ]
 
     client_f1 = _FakeMilvusFull(chunk_embeddings=chunks, page_fn=pages)
     _patch_embed(monkeypatch, spans)
@@ -1597,19 +1638,15 @@ def test_frequency_gate_does_not_affect_loo(session_dir: Path, monkeypatch):
 
     assert result_f1.recovery.verdict == result_f2.recovery.verdict
     assert result_f1.recovery.recovered == result_f2.recovery.recovered
-    assert (
-        [p.fit_pk for p in result_f1.recovery.per_fit]
-        == [p.fit_pk for p in result_f2.recovery.per_fit]
-    )
-    assert (
-        [p.recovered for p in result_f1.recovery.per_fit]
-        == [p.recovered for p in result_f2.recovery.per_fit]
-    )
+    assert [p.fit_pk for p in result_f1.recovery.per_fit] == [
+        p.fit_pk for p in result_f2.recovery.per_fit
+    ]
+    assert [p.recovered for p in result_f1.recovery.per_fit] == [
+        p.recovered for p in result_f2.recovery.per_fit
+    ]
 
 
-def test_cohort_consistency_flags_missing_own_chunk(
-    session_dir: Path, monkeypatch
-):
+def test_cohort_consistency_flags_missing_own_chunk(session_dir: Path, monkeypatch):
     """If a FIT's own pk is absent from the retained set, cohort-
     consistency marks it missing — warning only, run still exits 0."""
     spans = {
@@ -1632,15 +1669,22 @@ def test_cohort_consistency_flags_missing_own_chunk(
     def pages(q, coll, bs):
         if client is None or client.iterator_opens == 0:
             # LOO phase → return every FIT pk so recovery passes.
-            return [[
-                _hit("pk-A", 1.0), _hit("pk-B", 1.0), _hit("pk-D", 1.0),
-            ]]
+            return [
+                [
+                    _hit("pk-A", 1.0),
+                    _hit("pk-B", 1.0),
+                    _hit("pk-D", 1.0),
+                ]
+            ]
         # Main pass → pk-D is absent from every iterator's page, plus
         # one non-FIT neighbour so the JSONL isn't empty.
-        return [[
-            _hit("pk-A", 1.0), _hit("pk-B", 1.0),
-            _hit("nbr-1", 0.99),
-        ]]
+        return [
+            [
+                _hit("pk-A", 1.0),
+                _hit("pk-B", 1.0),
+                _hit("nbr-1", 0.99),
+            ]
+        ]
 
     client = _FakeMilvusFull(chunk_embeddings=chunks, page_fn=pages)
     _patch_embed(monkeypatch, spans)
