@@ -2,6 +2,10 @@
 
 [English](README.md) · **简体中文**
 
+[![CI](https://github.com/tmasjc/deka-oss/actions/workflows/ci.yml/badge.svg)](https://github.com/tmasjc/deka-oss/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+
 Deka —— **Definition and Embedding Knowledge Alignment（定义与嵌入知识对齐）**——
 是一个 human-in-the-loop 的工作台。你从一个模糊的念头出发——*「帮我找出类似
 这样的内容」*——它一步步把这份直觉打磨成一组精确、可复现、可大规模套用的标注结果，基于向量检索语料库。

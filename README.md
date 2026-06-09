@@ -2,6 +2,10 @@
 
 **English** · [简体中文](README.zh-CN.md)
 
+[![CI](https://github.com/tmasjc/deka-oss/actions/workflows/ci.yml/badge.svg)](https://github.com/tmasjc/deka-oss/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+
 Deka — **Definition and Embedding Knowledge Alignment** —
 is a human-in-the-loop workbench that escalates a domain expert’s intuitive notion of a query
 into a precise, reproducible, and scalable set of labelled results. You start with a fuzzy notion — *"find me
