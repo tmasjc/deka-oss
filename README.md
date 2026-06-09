@@ -22,7 +22,29 @@ flowchart LR
 | **3. Refine** | Distil that geometric cohort into an explicit, auditable language rubric, then judge a stratified sample with an LLM. |
 | **4. Apply** | Train a low-cost classifier on the rubric-judged sample to label the full cohort at near-zero marginal cost. |
 
-See [`whitepaper/whitepaper.md`](whitepaper/whitepaper.md) for the full design.
+## Learning the core idea
+
+**The ideas matter more than the code.** This repository ships a working web app,
+but treat it as a *demonstration* — one concrete embodiment of the method, not the
+point of it. The real contribution is the **harness**: the way a general-purpose
+model and a busy domain expert are arranged into a dependable retrieval-tuning
+instrument. That pattern generalises far beyond this particular corpus, this UI,
+or even this problem. If you read one thing here, read the whitepaper.
+
+The design rationale — the harness philosophy, the four-phase method, and the
+geometry behind the harvest — lives in
+[`whitepaper/whitepaper.md`](whitepaper/whitepaper.md). Read it there directly,
+or build the typeset PDF (with rendered figures and a table of contents):
+
+- **[Pandoc](https://pandoc.org/)** — Markdown → LaTeX
+- **[Tectonic](https://tectonic-typesetting.github.io/)** — LaTeX → PDF (self-contained, fetches its own packages)
+
+```bash
+cd whitepaper && ./build.sh        # → whitepaper/whitepaper.pdf
+```
+
+`build.sh` runs `pandoc whitepaper.md --pdf-engine=tectonic --toc`, pulling
+typesetting options from `metadata.yaml` and the diagrams from `figures/`.
 
 ## Why I Built Deka
 
@@ -127,8 +149,14 @@ cd web && npm install && npm run dev
 
 Open <http://localhost:5173> and sign in with the token from step 3.
 
-> **Single-server alternative:** `cd web && npm install && npm run build`, then
-> `uv run deka-web` serves the built UI directly at <http://127.0.0.1:8787>.
+### Single-server alternative
+
+Build the UI, then let the backend serve it directly at <http://127.0.0.1:8787>:
+
+```bash
+cd web && npm install && npm run build
+uv run deka-web
+```
 
 ## Development
 
