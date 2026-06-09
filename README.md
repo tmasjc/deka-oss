@@ -1,5 +1,7 @@
 ![Deka](banner.jpg)
 
+**English** · [简体中文](README.zh-CN.md)
+
 Deka — **Definition and Embedding Knowledge Alignment** —
 is a human-in-the-loop workbench that escalates a domain expert’s intuitive notion of a query
 into a precise, reproducible, and scalable set of labelled results. You start with a fuzzy notion — *"find me

@@ -1,0 +1,182 @@
+![Deka](banner.jpg)
+
+[English](README.md) · **简体中文**
+
+Deka —— **Definition and Embedding Knowledge Alignment（定义与嵌入知识对齐）**——
+是一个 human-in-the-loop 的工作台。你从一个模糊的念头出发——*「帮我找出类似
+这样的内容」*——它一步步把这份直觉打磨成一组精确、可复现、可大规模套用的标注结果，基于向量检索语料库。
+
+整个过程分为四个阶段：
+
+```mermaid
+flowchart LR
+    P["<b>1 · Probe</b><br/>tune hybrid retrieval"] --> H["<b>2 · Harvest</b><br/>sweep neighbourhood"]
+    H --> R["<b>3 · Refine</b><br/>derive LLM-judged rubric"]
+    R --> A["<b>4 · Apply</b><br/>train cheap classifier"]
+```
+
+| 阶段 | 做什么 |
+| --- | --- |
+| **1.&nbsp;Probe（探查）** | 交互式地调优混合检索（稠密 + 学习型稀疏），直到操作者对相关性的判断趋于稳定。 |
+| **2.&nbsp;Harvest（采集）** | 把验证过的 FIT 样例反过来当作查询，在语料库里搜罗它们嵌入邻域中的内容。 |
+| **3.&nbsp;Refine（精炼）** | 把这个几何簇提炼成一份清晰、可审计的语言化评判准则（rubric），再用 LLM 对一份分层抽样逐条判定。 |
+| **4.&nbsp;Apply（应用）** | 用 rubric 判定过的样本训练一个低成本分类器，以近乎为零的边际成本标注整个簇。 |
+
+## 理解核心思想
+
+**思想比代码更重要。** 本仓库附带了一个可运行的 Web 应用，但请把它看作一个演示 —— 方法的一种落地示例，而非方法本身。真正有价值的是这套**脚手架（harness）**：利用语言大模型和领域专家的直觉，组织成一件可靠的检索调优工具。这套范式的适用面远不止这份语料库、这个界面。如果你只看一样东西，那就看白皮书。
+
+完整的设计思路——脚手架的理念、四阶段方法，以及采集背后的几何原理——都在
+[`whitepaper/whitepaper.md`](whitepaper/whitepaper.md) 里。你可以直接读它，也可以自己构建排版后的
+PDF（含渲染好的插图与目录）：
+
+- **[Pandoc](https://pandoc.org/)** —— Markdown → LaTeX
+- **[Tectonic](https://tectonic-typesetting.github.io/)** —— LaTeX → PDF（自包含，会自行拉取所需宏包）
+
+```bash
+cd whitepaper && ./build.sh        # → whitepaper/whitepaper.pdf
+```
+
+`build.sh` 会执行 `pandoc whitepaper.md --pdf-engine=tectonic --toc`，从 `metadata.yaml`
+读取排版选项，并引入 `figures/` 下的各幅插图。
+
+## 为什么做 Deka
+
+Deka 最初是为一份客户对话记录语料库而做的。这些记录里内涵一家机构的运营知识——销售怎样应对异议、
+怎样建立信任、怎样推动续约 —— 可这些知识很难被有效消化。
+
+要把它盘活，本质上就是一件事：提出一个问题，可靠地拿回能回答它的那些文本块（chunk）。难点在于，
+一个文本块是否**真正切题**，只有领域专家判断得了——可这位专家并不需要、也不该为此去搞懂余弦距离或
+秩融合（rank fusion）。Deka 就是用来化解这层错位的脚手架：机器负责检索机制，人负责判断；几个专家
+裁定，最终落成语料库里每一个相关文本块上的标注。
+
+## 安装配置
+
+### 前置条件
+
+构建工具：
+
+- **[uv](https://docs.astral.sh/uv/) + Python 3.11+** —— 后端
+- **Node.js 18+** —— Web 界面
+
+若要做实时检索，还需要以下服务：
+
+- **Milvus** —— 存储文本块嵌入的向量库
+- **嵌入服务（Embeddings service）** —— 产出稠密 + 学习型稀疏向量
+- **兼容 OpenRouter 的 LLM** —— 用于反思、rubric 推导、判定
+- **PostgreSQL** *（可选）* —— 原文查询
+
+它们之间如何协作：
+
+```mermaid
+flowchart TD
+    UI["Web UI<br/><i>React + Vite</i>"] <-->|HTTP + cookie session| API["Deka backend<br/><i>FastAPI · deka-web</i>"]
+
+    API -->|embed query / spans| EMB["Embeddings service<br/><i>dense + learned-sparse</i>"]
+    API -->|vector search · RRF fusion| MIL[("Milvus<br/><i>chunk vectors</i>")]
+    API -->|reflect · derive rubric · judge| LLM["OpenRouter-compatible LLM"]
+    API -.->|original-content lookup<br/><i>optional</i>| PG[("PostgreSQL<br/><i>source transcripts</i>")]
+
+    EMB -.->|writes vectors| MIL
+```
+
+### 1. 安装依赖
+
+```bash
+uv sync
+```
+
+### 2. 配置
+
+把每个模板复制成正式文件名，然后编辑：
+
+```bash
+cp .env.example          .env
+cp config.yaml.example   config.yaml
+cp scopes.yaml.example   scopes.yaml
+cp users.yaml.example    users.yaml
+```
+
+| 文件 | 需要设置什么 |
+| --- | --- |
+| `.env` | `OPENROUTER_API_KEY` |
+| `config.yaml` | `search.embed_url`、`milvus_uri`、`postgres.dsn` → 指向你的服务 |
+| `scopes.yaml` | 每个 scope → 对应的 Milvus collection + Postgres table |
+| `users.yaml` | 一个 Web 用户（见下一步） |
+
+### 3. 生成登录令牌
+
+Web 界面会对每个请求做鉴权，依据是一个签名 cookie 会话，而会话信息以 `users.yaml` 为准。
+生成一个令牌，并**只**保存它的 SHA-256：
+
+```bash
+python -c "import secrets,hashlib; t=secrets.token_hex(32); print('token: ',t); print('sha256:',hashlib.sha256(t.encode()).hexdigest())"
+```
+
+- 把 `sha256` 填到 `users.yaml` 中某个用户 `id` 之下；`token` 自己留着用于登录。
+- *（可选）* 让会话在后端重启后依然有效：
+  ```bash
+  export DEKA_SESSION_SECRET=$(python -c "import secrets;print(secrets.token_urlsafe(32))")
+  ```
+
+## 运行 Web 应用
+
+在两个终端中分别启动后端和前端：
+
+```bash
+# 终端 1 —— FastAPI 后端 (http://127.0.0.1:8787)
+uv run deka-web
+
+# 终端 2 —— Vite 开发服务器 (http://localhost:5173)
+cd web && npm install && npm run dev
+```
+
+打开 <http://localhost:5173>，用第 3 步的令牌登录。
+
+### 单服务器方式
+
+先把前端构建出来，再由后端直接在 <http://127.0.0.1:8787> 上托管它：
+
+```bash
+cd web && npm install && npm run build
+uv run deka-web
+```
+
+## 开发
+
+```bash
+uv run pytest        # 运行测试套件
+uv run ruff check .  # 代码检查
+```
+
+## 目录结构
+
+```
+.
+├── src/                     # Python 后端
+│   ├── search/              # 阶段 1 —— 混合检索 + RRF 融合
+│   ├── reflection/          # 阶段 1 —— LLM 反思代理
+│   ├── extraction/          # span 抽取（带缓存）
+│   ├── anchor/              # 阶段 2 —— 以 FIT 为锚点的采集
+│   ├── refine/              # 阶段 3 —— rubric 推导 + LLM 判定
+│   ├── apply/               # 阶段 4 —— 逻辑回归分类器
+│   ├── session/             # 会话状态机
+│   ├── scopes/              # 语料库 scope 注册表
+│   ├── postgres/            # 原文获取器
+│   ├── replay/              # 收敛度量
+│   ├── logging/             # 进度日志写入器
+│   ├── auth/                # cookie 会话鉴权
+│   └── web_api/             # FastAPI 后端（`deka-web` 入口）
+├── web/                     # React + Vite 前端（页面、组件、状态）
+├── harness/prompts/         # 运行时 LLM 提示词（系统、反思、抽取、rubric）
+├── whitepaper/              # 设计白皮书 + 图
+├── tests/                   # pytest 测试套件
+├── config.yaml.example      # 服务端点 + 各阶段调优
+├── scopes.yaml.example      # scope → {Milvus collection, Postgres table}
+├── users.yaml.example       # Web 鉴权 —— 用户 + 令牌 SHA-256
+├── .env.example             # API key + 端点覆盖
+└── pyproject.toml           # Python 项目（用 uv 管理）
+```
+
+`*.example` 文件都是模板；把它们各自复制成正式文件名（正式文件已被 gitignore）即可覆盖默认值。
+正式文件不存在时，加载器会自动回退到对应的 example。
