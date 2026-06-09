@@ -1,17 +1,26 @@
-# Deka
+![Deka](banner.jpg)
 
-**Definition and Embedding Knowledge Alignment** — a human-in-the-loop
-workbench that escalates a domain expert's intuitive notion of a query into a
-precise, reproducible, and scalable set of labelled results over a vector-search
-corpus. The operator only ever renders judgements about content; the harness
-owns all retrieval mechanics.
+Deka — **Definition and Embedding Knowledge Alignment** —
+is a human-in-the-loop workbench that escalates a domain expert’s intuitive notion of a query
+into a precise, reproducible, and scalable set of labelled results. You start with a fuzzy notion — *"find me
+content like this"* — and end with a precise, reproducible, and scalable set
+of labelled results drawn from a vector-search corpus. 
 
 It proceeds in four phases:
 
-1. **Probe** — interactively tune hybrid (dense + learned-sparse) retrieval until the operator's relevance judgements converge.
-2. **Harvest** — treat the validated FIT examples as a query and sweep the corpus for their embedding neighbourhood.
-3. **Refine** — distil that geometric cohort into an explicit, auditable language rubric, then judge a stratified sample with an LLM.
-4. **Apply** — train a low-cost classifier on the rubric-judged sample to label the full cohort at near-zero marginal cost.
+```mermaid
+flowchart LR
+    P["<b>1 · Probe</b><br/>tune hybrid retrieval"] --> H["<b>2 · Harvest</b><br/>sweep neighbourhood"]
+    H --> R["<b>3 · Refine</b><br/>derive LLM-judged rubric"]
+    R --> A["<b>4 · Apply</b><br/>train cheap classifier"]
+```
+
+| Phase | What happens |
+| --- | --- |
+| **1. Probe** | Interactively tune hybrid (dense + learned-sparse) retrieval until the operator's relevance judgements converge. |
+| **2. Harvest** | Treat the validated FIT examples as a query and sweep the corpus for their embedding neighbourhood. |
+| **3. Refine** | Distil that geometric cohort into an explicit, auditable language rubric, then judge a stratified sample with an LLM. |
+| **4. Apply** | Train a low-cost classifier on the rubric-judged sample to label the full cohort at near-zero marginal cost. |
 
 See [`whitepaper/whitepaper.md`](whitepaper/whitepaper.md) for the full design.
 
