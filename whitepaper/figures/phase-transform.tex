@@ -1,26 +1,51 @@
-% F2 — the four-phase precision/cost/legibility transformation
+% F2 — the four-phase precision/cost/legibility transformation (graphical abstract)
 \begin{tikzpicture}[
   font=\small,
-  node distance=4mm,
-  phase/.style={draw, rounded corners, align=center, text width=38mm, minimum height=10mm, fill=RoyalBlue!5},
-  note/.style={align=left, text width=92mm, font=\footnotesize},
-  art/.style={align=center, font=\footnotesize\itshape, text=black!55},
-  arr/.style={-{Stealth}, thick}
+  node distance=2.8mm,
+  phase/.style={draw=RoyalBlue!55, line width=0.5pt, rounded corners=2.5pt,
+                align=center, text width=38mm, minimum height=10mm},
+  badge/.style={circle, fill=RoyalBlue, text=white, font=\bfseries\scriptsize,
+                inner sep=0pt, minimum size=5.2mm},
+  note/.style={align=left, text width=80mm, font=\footnotesize, text=black!72},
+  art/.style={align=center, font=\footnotesize\itshape, text=black!48},
+  arr/.style={-{Stealth[length=2mm]}, draw=black!40, line width=0.6pt}
 ]
+% phase boxes — fill deepens to signal the forward escalation
 \node[art] (a0) {fuzzy operator intuition};
-\node[phase, below=of a0] (p1) {\textbf{1. Probe}};
-\node[note, right=7mm of p1] (n1) {Tune hybrid search while the operator rates chunks. \emph{Transforms} intuition into human-validated FIT / NOT\_FIT examples.};
+\node[phase, below=of a0, fill=RoyalBlue!6]  (p1)
+  {\textbf{Probe}\\[1.5pt]{\scriptsize\itshape pays with human attention}};
 \node[art, below=of p1] (a1) {rated examples};
-\node[phase, below=of a1] (p2) {\textbf{2. Harvest}};
-\node[note, right=7mm of p2] (n2) {The FITs become a query set; sweep the corpus by embedding distance. \emph{Transforms} examples into a geometric cohort.};
+\node[phase, below=of a1, fill=RoyalBlue!12] (p2)
+  {\textbf{Harvest}\\[1.5pt]{\scriptsize\itshape pays with geometry}};
 \node[art, below=of p2] (a2) {geometric cohort};
-\node[phase, below=of a2] (p3) {\textbf{3. Refine}};
-\node[note, right=7mm of p3] (n3) {Derive a rubric prompt from the session; judge a stratified sample. \emph{Transforms} geometry into a readable, auditable language boundary.};
+\node[phase, below=of a2, fill=RoyalBlue!18] (p3)
+  {\textbf{Refine}\\[1.5pt]{\scriptsize\itshape pays with model calls}};
 \node[art, below=of p3] (a3) {language rubric};
-\node[phase, below=of a3] (p4) {\textbf{4. Apply}};
-\node[note, right=7mm of p4] (n4) {Train a cheap classifier on the judged sample; score the full cohort. \emph{Transforms} expensive LLM judging into near-zero-cost labels at scale.};
+\node[phase, below=of a3, fill=RoyalBlue!24] (p4)
+  {\textbf{Apply}\\[1.5pt]{\scriptsize\itshape pays with a dot product}};
 \node[art, below=of p4] (a4) {labelled cohort at scale};
 
+% number badges seated on the left edge of each phase box
+\node[badge] at (p1.west) {1};
+\node[badge] at (p2.west) {2};
+\node[badge] at (p3.west) {3};
+\node[badge] at (p4.west) {4};
+
+% right-hand transform notes, one per phase
+\node[note, right=9mm of p1] (n1)
+  {Tune hybrid search while the operator rates chunks --- a fuzzy intuition
+   becomes human-validated FIT / NOT\_FIT examples.};
+\node[note, right=9mm of p2] (n2)
+  {The FITs become a query set; sweep the corpus by embedding distance ---
+   examples become a geometric cohort.};
+\node[note, right=9mm of p3] (n3)
+  {Derive a rubric prompt and judge a stratified sample --- geometry
+   becomes a readable, auditable language boundary.};
+\node[note, right=9mm of p4] (n4)
+  {Train a cheap classifier on the judged sample --- expensive LLM judging
+   becomes near-zero-cost labels at scale.};
+
+% flow of the transformed object down the chain
 \draw[arr] (a0) -- (p1);
 \draw[arr] (p1) -- (a1);
 \draw[arr] (a1) -- (p2);

@@ -24,7 +24,9 @@ abstract: >
   state so that the combination is reliable --- realised as a
   progression in which each phase trades deliberately along the axes of
   precision, cost, and legibility. This paper presents the system's
-  design and methods rather than an empirical evaluation.
+  design and methods rather than an empirical evaluation. The
+  implementation is open-sourced at
+  [github.com/tmasjc/deka-oss](https://github.com/tmasjc/deka-oss).
 documentclass: article
 fontsize: 11pt
 geometry: "margin=1in"
@@ -39,4 +41,20 @@ header-includes:
   - \usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit, backgrounds}
   - \usepackage{microtype}
   - \usepackage{booktabs}
+  - \usepackage{float}
+  - \usepackage{needspace}
+  - \usepackage{titling}
+  - \setlength{\droptitle}{-2.5cm}
   - \definecolor{RoyalBlue}{HTML}{2A52BE}
+include-before:
+  - |
+    \begin{figure}[H]
+    \centering
+    \input{figures/phase-transform.tex}
+    \caption{\textbf{The Deka method at a glance.} The four phases form a
+    chain of transformations along the axes of precision, cost, and
+    legibility --- a fuzzy intuition becomes rated examples, a geometric
+    cohort, a readable rubric, and finally a label on every relevant chunk
+    in the corpus.}
+    \label{fig:transform}
+    \end{figure}

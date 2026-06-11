@@ -169,6 +169,8 @@ Phase 1 exposes exactly four search parameters, and all four are fixed
 the moment the first turn begins (Section 2). They are scaffolding for
 reaching the goal efficiently, not the goal itself.
 
+\needspace{14\baselineskip}
+
 | Parameter | Role |
 |-----------|------|
 | `rrf_k` | Rank-fusion smoothing constant; a larger value flattens the rank-decay curve. |
@@ -201,7 +203,7 @@ agent's observe--diagnose--hypothesise trace. Everything the operator
 does is a judgement about content; everything mechanical happens behind
 the panel.
 
-\begin{figure}[t]
+\begin{figure}[H]
 \centering
 \input{figures/state-machine.tex}
 \caption{The session phase state machine. Phases~2--4 run sequentially after Phase~1 converges, each gated on operator confirmation and a configuration flag; a declined or disabled phase routes directly to \texttt{DONE}. Failure states (\texttt{ANCHOR\_FAILED}, \texttt{REFINE\_FAILED}, \texttt{APPLY\_FAILED}) are omitted for legibility.}
@@ -209,13 +211,6 @@ the panel.
 \end{figure}
 
 # The four-phase method
-
-\begin{figure}[t]
-\centering
-\input{figures/phase-transform.tex}
-\caption{The four phases as a chain of transformations. Each phase moves the operator's question one step further along the axes of precision, cost, and legibility --- from a fuzzy intuition to a labelled cohort applied across the full corpus.}
-\label{fig:transform}
-\end{figure}
 
 The four phases share a substrate but answer four different questions,
 and each hands its successor a more refined object than it received
@@ -527,6 +522,19 @@ auditable account of a concept --- validated examples, a readable rubric,
 and a classifier that carries it across the whole corpus. The lesson
 generalises past this corpus: when the model is unreliable and the human
 is expensive, the leverage is in the harness between them.
+
+# Code availability
+
+The implementation described in this paper is open-sourced at
+[github.com/tmasjc/deka-oss](https://github.com/tmasjc/deka-oss). It is a
+Python codebase: a FastAPI backend and a React (Vite) workbench front the
+operator loop, hybrid retrieval runs over Milvus --- dense and
+learned-sparse fields --- with a companion PostgreSQL store holding the
+pre-chunking original text, and the Phase 4 applier is a lightweight linear
+classifier. Both the embedding service and the language-model router are
+provider-agnostic: any HTTP embedder returning dense and learned-sparse
+vectors, and any OpenAI-compatible endpoint, so the harness is bound to no
+particular model vendor.
 
 \appendix
 
