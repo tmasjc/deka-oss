@@ -1,6 +1,6 @@
 title: "Deka — Aligning Human Intuition with an Embedding Space"
 subtitle: "A Human-in-the-Loop Workbench for High-Precision Corpus Retrieval"
-author: "Thomas Jc\\thanks{\\href{https://github.com/tmasjc}{github.com/tmasjc}}"
+author: "`Thomas Jc \\\\ {\\small \\href{mailto:thomas.jcng@gmail.com}{thomas.jcng@gmail.com}}`{=latex}"
 date: "June 2026"
 abstract: >
   A large corpus of Chinese customer-conversation transcripts holds
