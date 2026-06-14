@@ -578,28 +578,35 @@ splicing back into one already finished.
 To make the escalation concrete, here is one converged session carried
 through all four phases against the configured collection. It is an
 *illustration*, not a benchmark --- one run cannot characterise the
-method's accuracy, but it puts the arc and its costs in real numbers.
+method's accuracy, but it puts the arc and its costs in real numbers. The
+concept under search was a price objection --- parents balking at a
+course's cost.
 
-The session **converged in three Phase 1 turns**, over which the operator
-rated twenty-three chunks --- twenty FIT, three NOT\_FIT --- at a per-turn
-precision near 0.87. Those twenty FITs are the whole human budget. Phase 2
-reframed them as the query: the quality gate kept fifteen anchors,
-calibration set a base radius $T = 0.18$, and the per-anchor searches
-returned a union of 154,109 candidates that the two-anchor gate ($f = 2$)
-cut to a **38,099-chunk cohort** --- a roughly fourfold reduction. The
-leave-one-out recovery check came back FLAGGED, not HEALTHY (ten of
-fifteen held-out FITs re-surfaced), the signature of a somewhat diffuse
-concept; the cohort was judged usable.
+The session **converged in four Phase 1 turns**, over which the operator
+rated thirty-five chunks --- thirty-two FIT, two NOT\_FIT, one DISCARD ---
+at a per-turn precision that held at 1.0 for three turns and eased to 0.8
+on the last. Those thirty-two FITs are the whole human budget. Phase 2
+reframed them as the query: the quality gate kept twenty-four anchors ---
+dropping eight whose own-chunk recovery distance overran the base radius
+--- calibration set $T = 0.168$, and the per-anchor searches returned a
+union of 764,907 candidates that the two-anchor gate ($f = 2$) trimmed to
+a **533,595-chunk cohort**, discarding the roughly 231,000 chunks that
+fell inside only a single anchor's radius. The leave-one-out recovery
+check came back **HEALTHY** (twenty-three of twenty-four held-out FITs
+re-surfaced) and both NOT\_FIT intruders were correctly excluded --- the
+signature of a tight, well-anchored concept.
 
-Phase 3 judged a 500-chunk stratified sample, splitting **288 KEEP /
-211 DROP**, with the KEEP rate falling as distance to the nearest FIT
-grew --- geometry and meaning agreeing at the core and parting at the
-edge. Phase 4 fit a logistic classifier on that sample and, under
-five-by-five cross-validation, reached **precision 0.75 and recall 0.91**
-at the operator's threshold ($0.750 \pm 0.003$ across folds). Applied to
-the cohort, it labelled **27,148 chunks KEEP**.
+Phase 3 judged a 500-chunk stratified sample, splitting **203 KEEP /
+297 DROP**, with the KEEP rate falling from 0.86 in the nearest decile to
+roughly 0.3 at the far edge --- geometry and meaning agreeing at the core
+and parting at the rim. Phase 4 fit a logistic classifier on that sample
+and, under five-by-five cross-validation, reached **precision 0.76 and
+recall 0.76** at the operator's threshold ($\tau = 0.52$; cross-validated
+precision $0.751 \pm 0.004$ across folds, clearing the 0.75 bar). Applied
+to the cohort, it labelled **209,102 chunks KEEP**.
 
-Read end to end, the run is the paper's claim in miniature: *three turns
-and twenty examples become some twenty-seven thousand labelled chunks* ---
-human judgement spent only at the front, every later step paying it down
-with geometry, a sample of model calls, and a dot product per chunk.
+Read end to end, the run is the paper's claim in miniature: *four turns
+and thirty-two examples become two hundred thousand labelled
+chunks* --- human judgement spent only at the front, every later step
+paying it down with geometry, a sample of model calls, and a dot product
+per chunk.
