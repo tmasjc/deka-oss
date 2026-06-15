@@ -210,6 +210,21 @@ class SpanExtractor:
         self._cache_hits = 0
         self._call_count = 0
 
+    def close(self) -> None:
+        """Best-effort release of the underlying OpenAI httpx pool.
+
+        The ``SpanCache`` opens and closes its JSONL per write and holds
+        no persistent file descriptor, so only the client is closed here.
+        Idempotent: ``OpenAI.close`` guards its httpx client.
+        """
+        client = getattr(self, "_client", None)
+        close = getattr(client, "close", None)
+        if callable(close):
+            try:
+                close()
+            except Exception as exc:  # noqa: BLE001
+                log.debug("SpanExtractor client close raised: %s", exc)
+
     def extract(
         self,
         *,

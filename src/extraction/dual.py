@@ -82,6 +82,17 @@ class DualSpanExtractor:
 
     def close(self) -> None:
         self._pool.shutdown(wait=False)
+        # Each sub-extractor owns its own OpenAI httpx pool (built
+        # independently in ``SpanExtractor.__init__``); they do not
+        # alias, so close both. Best-effort so one failure can't leak
+        # the other.
+        for extractor in (self._primary, self._secondary):
+            close = getattr(extractor, "close", None)
+            if callable(close):
+                try:
+                    close()
+                except Exception as exc:  # noqa: BLE001
+                    log.debug("DualSpanExtractor sub-extractor close raised: %s", exc)
 
     def __del__(self) -> None:
         # Best-effort cleanup if the owner forgot to call ``close()``.

@@ -131,6 +131,19 @@ class ReflectionAgent:
         self._system_prompt = load_system_prompt()
         self._reflection_instructions = load_reflection_instructions()
 
+    def close(self) -> None:
+        """Best-effort release of the underlying OpenAI httpx pool.
+
+        Idempotent: ``OpenAI.close`` guards its httpx client.
+        """
+        client = getattr(self, "_client", None)
+        close = getattr(client, "close", None)
+        if callable(close):
+            try:
+                close()
+            except Exception as exc:  # noqa: BLE001
+                log.debug("ReflectionAgent client close raised: %s", exc)
+
     def reflect(self, state: "SessionState") -> dict[str, Any] | None:
         """Run narrative reflection on the latest completed turn.
 
