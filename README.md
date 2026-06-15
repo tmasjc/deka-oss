@@ -1,4 +1,4 @@
-![Deka](banner.jpg)
+![Deka](assets/banner.jpg)
 
 **English** · [简体中文](README.zh-CN.md)
 
@@ -14,19 +14,27 @@ of labelled results drawn from a vector-search corpus.
 
 It proceeds in four phases:
 
-```mermaid
-flowchart LR
-    P["<b>1 · Probe</b><br/>tune hybrid retrieval"] --> H["<b>2 · Harvest</b><br/>sweep neighbourhood"]
-    H --> R["<b>3 · Refine</b><br/>derive LLM-judged rubric"]
-    R --> A["<b>4 · Apply</b><br/>train cheap classifier"]
-```
-
 | Phase | What happens |
 | --- | --- |
 | **1.&nbsp;Probe** | Interactively tune hybrid (dense + learned-sparse) retrieval until the operator's relevance judgements converge. |
 | **2.&nbsp;Harvest** | Treat the validated FIT examples as a query and sweep the corpus for their embedding neighbourhood. |
 | **3.&nbsp;Refine** | Distil that geometric cohort into an explicit, auditable language rubric, then judge a stratified sample with an LLM. |
 | **4.&nbsp;Apply** | Train a low-cost classifier on the rubric-judged sample to label the full cohort at near-zero marginal cost. |
+
+## A look at the workbench
+
+Two moments from a live session — the operator tuning retrieval, and the finished cohort.
+
+<table>
+  <tr>
+    <td width="50%"><img src="assets/screen1.png" width="100%" alt="Deka's Probe screen — a candidate transcript with highlighted spans beside live convergence and per-phase metrics."></td>
+    <td width="50%"><img src="assets/screen2.png" width="100%" alt="Deka's finalized cohort screen — kept-vs-candidate counts, precision/recall, and the workflow rail."></td>
+  </tr>
+  <tr>
+    <td><sub><b>Probe</b> — interactively tuning hybrid retrieval. The operator judges the highlighted spans in each candidate chunk while convergence metrics (PQK, FIT, NOT_FIT) and the per-phase settings track in the sidebar.</sub></td>
+    <td><sub><b>Done</b> — the finalized cohort: 58,243 of 70,100 candidates kept at 59.6% precision / 91.2% recall, alongside the rubric, threshold, and operator decision that produced it. The workflow rail on the right records every step from START to SAMPLE.</sub></td>
+  </tr>
+</table>
 
 ## Learning the core idea
 
