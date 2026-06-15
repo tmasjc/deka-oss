@@ -17,10 +17,28 @@ from src.search.config import SearchConfig
 from src.session.state import SessionState
 from src.scopes import Scope
 from src.web_api.sessions import (
+    STAGE_DONE,
     STAGE_HARVESTING,
     STAGE_IDLE,
     SessionStore,
 )
+
+
+class _CloseSpy:
+    """Fake per-session resource that records whether close() ran."""
+
+    def __init__(self) -> None:
+        self.closed = False
+
+    def close(self) -> None:
+        self.closed = True
+
+
+class _RaisingClose:
+    """Fake resource whose close() raises, to test failure isolation."""
+
+    def close(self) -> None:
+        raise RuntimeError("boom")
 
 
 def _config() -> SearchConfig:
@@ -109,3 +127,75 @@ def test_attach_seeds_last_activity_so_freshly_resumed_session_isnt_evicted(
     # immediately after attach must not drop the freshly-resumed
     # context.
     assert store.evict_idle(threshold_seconds=0.001) == [] != [ctx.state.session_id]
+
+
+def test_evict_idle_drops_done_context_past_threshold(
+    store: SessionStore,
+) -> None:
+    """A terminal (DONE) session is re-hydratable from disk, so the
+    sweep must reclaim it just like an idle one (issue #60)."""
+    ctx = store.create(scope=_scope(), user_id="alice")
+    sid = ctx.state.session_id
+    ctx.progress.set_stage(STAGE_DONE)
+    ctx.last_activity_ts = time.monotonic() - 600.0
+
+    evicted = store.evict_idle(threshold_seconds=30.0)
+    assert evicted == [sid]
+    assert store.get(sid) is None
+
+
+def test_evict_calls_close_on_resources(store: SessionStore) -> None:
+    """Eviction must release the per-session extractor + reflection
+    hook, not just drop the dict entry (the thread/client leak)."""
+    ctx = store.create(scope=_scope(), user_id="alice")
+    ctx.extractor = _CloseSpy()  # type: ignore[assignment]
+    ctx.reflection_hook = _CloseSpy()  # type: ignore[assignment]
+    ctx.progress.set_stage(STAGE_DONE)
+    ctx.last_activity_ts = time.monotonic() - 600.0
+
+    store.evict_idle(threshold_seconds=30.0)
+    assert ctx.extractor.closed  # type: ignore[union-attr]
+    assert ctx.reflection_hook.closed  # type: ignore[union-attr]
+
+
+def test_evict_close_failure_in_reflection_hook_isolated(
+    store: SessionStore,
+) -> None:
+    """A failing reflection-hook close must not block the extractor
+    close, nor stop the session from being evicted."""
+    ctx = store.create(scope=_scope(), user_id="alice")
+    spy = _CloseSpy()
+    ctx.extractor = spy  # type: ignore[assignment]
+    ctx.reflection_hook = _RaisingClose()  # type: ignore[assignment]
+    ctx.progress.set_stage(STAGE_DONE)
+    ctx.last_activity_ts = time.monotonic() - 600.0
+
+    assert store.evict_idle(threshold_seconds=30.0) == [ctx.state.session_id]
+    assert spy.closed
+
+
+def test_evict_close_failure_in_extractor_isolated(
+    store: SessionStore,
+) -> None:
+    """Isolation holds in the other order too: a failing extractor
+    close must not block the reflection-hook close."""
+    ctx = store.create(scope=_scope(), user_id="alice")
+    spy = _CloseSpy()
+    ctx.extractor = _RaisingClose()  # type: ignore[assignment]
+    ctx.reflection_hook = spy  # type: ignore[assignment]
+    ctx.progress.set_stage(STAGE_DONE)
+    ctx.last_activity_ts = time.monotonic() - 600.0
+
+    assert store.evict_idle(threshold_seconds=30.0) == [ctx.state.session_id]
+    assert spy.closed
+
+
+def test_drop_calls_close(store: SessionStore) -> None:
+    """drop() leaks the same resources as eviction did; it must close
+    them too (covers discard(), which routes through drop())."""
+    ctx = store.create(scope=_scope(), user_id="alice")
+    spy = _CloseSpy()
+    ctx.extractor = spy  # type: ignore[assignment]
+
+    assert store.drop(ctx.state.session_id) is True
+    assert spy.closed

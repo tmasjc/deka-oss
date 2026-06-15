@@ -69,6 +69,14 @@ STAGE_APPLY_PREPARING = "apply_preparing"
 STAGE_APPLY_APPLYING = "apply_applying"
 STAGE_DONE = "done"
 
+# Stages the idle-eviction sweep may reclaim. ``STAGE_IDLE`` is a
+# session at rest; ``STAGE_DONE`` is terminal — every endpoint sets it
+# on completion and a DONE session is fully re-hydratable from disk via
+# ``hydrate_done_view``, so dropping it loses no persisted state. All
+# other stages mean a daemon worker is mid-flight; evicting one would
+# orphan it, so they are deliberately excluded.
+EVICTABLE_STAGES = frozenset({STAGE_IDLE, STAGE_DONE})
+
 
 class Progress:
     """Thread-safe mutable progress snapshot for a single in-flight operation.
@@ -168,6 +176,30 @@ class SessionContext:
     # Stored on the web-only context (not on SessionState) so the TUI's
     # in-memory contract stays unchanged.
     anchor_result: AnchorResult | None = None
+
+    def close(self) -> None:
+        """Best-effort release of the OS resources this context owns.
+
+        Shuts down the span extractor's ``ThreadPoolExecutor`` and
+        closes the extractor's / reflection hook's OpenAI httpx pools.
+        Each resource is closed in its own guarded block so one failure
+        can't leak the others. Called by the eviction sweep and by
+        ``SessionStore.drop`` after the context is unreachable.
+
+        ``logging_hook`` is intentionally not closed here —
+        ``teardown_run_logging`` owns that handler's lifecycle.
+        """
+        for resource in (self.extractor, self.reflection_hook):
+            close = getattr(resource, "close", None)
+            if callable(close):
+                try:
+                    close()
+                except Exception as exc:  # noqa: BLE001
+                    log.warning(
+                        "SessionContext.close: %r close raised: %s",
+                        resource,
+                        exc,
+                    )
 
 
 class SessionStore:
@@ -382,9 +414,13 @@ class SessionStore:
 
     def drop(self, session_id: str) -> bool:
         with self._registry_lock:
-            existed = self._sessions.pop(session_id, None) is not None
+            ctx = self._sessions.pop(session_id, None)
+        # Release the log handler and per-session OS resources (extractor
+        # thread pool + OpenAI clients) once the context is unreachable.
         teardown_run_logging(session_id)
-        return existed
+        if ctx is not None:
+            ctx.close()
+        return ctx is not None
 
     def discard(self, session_id: str, user_id: str) -> bool:
         """Hard-delete a session: evict the in-memory context and unlink
@@ -426,31 +462,38 @@ class SessionStore:
                 ctx.last_activity_ts = time.monotonic()
 
     def evict_idle(self, *, threshold_seconds: float) -> list[str]:
-        """Drop in-memory contexts that have been idle past
-        ``threshold_seconds`` AND whose ``progress.stage`` is idle.
+        """Drop in-memory contexts idle past ``threshold_seconds`` whose
+        ``progress.stage`` is evictable (see ``EVICTABLE_STAGES``).
 
-        The non-idle skip is critical: a session in the middle of a
-        long-running harvest or judge run has its progress stage set
-        to ``STAGE_HARVESTING`` / ``STAGE_REFINE_*`` for the duration.
-        Evicting one mid-flight would orphan the daemon worker. Disk
-        state is canonical, so a session evicted while idle can be
-        re-hydrated lazily on the next ``GET /api/session/<sid>`` or
-        ``POST /api/session/<sid>/resume``.
+        Evictable stages are ``STAGE_IDLE`` (at rest) and ``STAGE_DONE``
+        (terminal). Excluding every other stage is critical: a session
+        in the middle of a long-running harvest or judge run has its
+        stage set to ``STAGE_HARVESTING`` / ``STAGE_REFINE_*`` for the
+        duration, and evicting one mid-flight would orphan the daemon
+        worker. Disk state is canonical, so a session evicted while idle
+        or done is re-hydrated lazily on the next
+        ``GET /api/session/<sid>`` or ``POST /api/session/<sid>/resume``
+        (terminal sessions via ``hydrate_done_view``), losing no
+        persisted state.
         """
         now = time.monotonic()
         with self._registry_lock:
-            stale = [
-                sid
+            stale_ctxs = {
+                sid: ctx
                 for sid, ctx in self._sessions.items()
-                if ctx.progress.snapshot().get("stage") == STAGE_IDLE
+                if ctx.progress.snapshot().get("stage") in EVICTABLE_STAGES
                 and (now - ctx.last_activity_ts) >= threshold_seconds
-            ]
-            for sid in stale:
+            }
+            for sid in stale_ctxs:
                 self._sessions.pop(sid, None)
-        # teardown_run_logging closes the per-session log handler so
-        # the file isn't held open after eviction.
-        for sid in stale:
+        # Release per-session resources OUTSIDE the registry lock:
+        # teardown_run_logging closes the log handler; ctx.close() shuts
+        # down the extractor thread pool and OpenAI clients. Both are
+        # safe now the context is unreachable via get()/touch().
+        for sid, ctx in stale_ctxs.items():
             teardown_run_logging(sid)
+            ctx.close()
+        stale = list(stale_ctxs)
         if stale:
             log.info("Idle-evicted %d session(s): %s", len(stale), stale)
         return stale
